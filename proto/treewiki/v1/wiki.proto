@@ -1,0 +1,106 @@
+syntax = "proto3";
+
+package treewiki.v1;
+
+option go_package = "github.com/dnjstjqppk-dev/treewiki/proto/v1;treewikiv1";
+
+service WikiService {
+  rpc GetPage(GetPageRequest) returns (GetPageResponse);
+  rpc SaveRevision(SaveRevisionRequest) returns (SaveRevisionResponse);
+  rpc GetRevisionDiff(GetRevisionDiffRequest) returns (GetRevisionDiffResponse);
+  rpc GetTopicTree(GetTopicTreeRequest) returns (GetTopicTreeResponse);
+}
+
+message Page {
+  string id = 1;
+  int32 namespace_id = 2;
+  string title = 3;
+  string slug = 4;
+  string current_revision_id = 5;
+  string protection_level = 6;
+  bool is_redirect = 7;
+  string redirect_target = 8;
+  int64 view_count = 9;
+}
+
+message Revision {
+  string id = 1;
+  string page_id = 2;
+  string parent_revision_id = 3;
+  string author_id = 4;
+  string author_ip_masked = 5;
+  string summary = 6;
+  int32 byte_length = 7;
+  int32 byte_delta = 8;
+  string sha256_hash = 9;
+  bool is_minor = 10;
+  bool is_rollback = 11;
+  string created_at = 12;
+}
+
+message GetPageRequest {
+  int32 namespace_id = 1;
+  string slug = 2;
+}
+
+message GetPageResponse {
+  Page page = 1;
+  Revision current_revision = 2;
+  string raw_wikitext = 3;
+  string parsed_html = 4;
+  repeated string categories = 5;
+}
+
+message SaveRevisionRequest {
+  int32 namespace_id = 1;
+  string title = 2;
+  string raw_wikitext = 3;
+  string summary = 4;
+  string expected_parent_hash = 5;
+  bool is_minor = 6;
+}
+
+message SaveRevisionResponse {
+  bool success = 1;
+  string revision_id = 2;
+  string sha256_hash = 3;
+  bool conflict_detected = 4;
+}
+
+message GetRevisionDiffRequest {
+  string from_revision_id = 1;
+  string to_revision_id = 2;
+}
+
+message DiffChunk {
+  int32 type = 1; // 0 = Equal, 1 = Insert, 2 = Delete
+  string content = 2;
+  int32 old_line = 3;
+  int32 new_line = 4;
+}
+
+message GetRevisionDiffResponse {
+  repeated DiffChunk chunks = 1;
+  int32 additions = 2;
+  int32 deletions = 3;
+}
+
+message TopicNode {
+  string id = 1;
+  string title = 2;
+  string slug = 3;
+  string description = 4;
+  int32 depth = 5;
+  string icon = 6;
+  string color_hex = 7;
+  repeated string children_ids = 8;
+}
+
+message GetTopicTreeRequest {
+  string root_node_id = 1;
+  int32 max_depth = 2;
+}
+
+message GetTopicTreeResponse {
+  repeated TopicNode nodes = 1;
+}

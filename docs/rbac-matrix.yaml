@@ -1,0 +1,116 @@
+version: "1.0"
+platform: "Treewiki"
+description: "Role-Based Access Control (RBAC) and Attribute-Based Access Control (ABAC) Matrix"
+
+roles:
+  ANONYMOUS:
+    description: "Unauthenticated guest visiting the wiki identified by IP address"
+    level: 0
+    permissions:
+      - page:read
+      - page:history_view
+      - page:diff_view
+      - page:edit_unprotected
+      - search:execute
+      - talk:read
+      - talk:create_thread_unprotected
+      - topic_tree:view
+
+  REGISTERED:
+    description: "Authenticated user with verified email address"
+    level: 10
+    inherits: ANONYMOUS
+    permissions:
+      - user:profile_edit
+      - user:watchlist_manage
+      - user:preferences_update
+      - page:edit_registered
+      - talk:participate_poll
+      - media:upload
+      - notification:receive
+
+  AUTOCONFIRMED:
+    description: "Established account meeting minimum tenure (7 days) and edit threshold (15 edits)"
+    level: 20
+    inherits: REGISTERED
+    permissions:
+      - page:edit_semiprotected
+      - page:move_unprotected
+      - media:reupload
+      - abuse_filter:bypass_throttling
+
+  ROLLBACKER:
+    description: "Vetted counter-vandalism contributor with instant reversion capabilities"
+    level: 30
+    inherits: AUTOCONFIRMED
+    permissions:
+      - revision:rollback_fast
+      - revision:mark_patrolled
+      - recent_changes:filter_unpatrolled
+
+  EDITOR:
+    description: "Senior content creator and curator trusted with structural wiki assets"
+    level: 40
+    inherits: ROLLBACKER
+    permissions:
+      - page:edit_template_namespace
+      - page:edit_protected_editor
+      - semantic:statement_edit
+      - topic_tree:node_create
+      - topic_tree:node_link
+
+  SYSOP:
+    description: "System operator and community administrator"
+    level: 50
+    inherits: EDITOR
+    permissions:
+      - page:protect
+      - page:unprotect
+      - page:delete
+      - page:undelete
+      - user:block_ip
+      - user:block_account
+      - abuse_filter:create
+      - abuse_filter:modify
+      - talk:close_poll
+      - audit:view_sysop_logs
+
+  OVERSIGHT:
+    description: "Privacy and legal compliance officer responsible for irreversible PII and defamation suppression"
+    level: 60
+    inherits: SYSOP
+    permissions:
+      - revision:suppress_oversight
+      - revision:view_suppressed
+      - log:view_oversight_logs
+      - pipa_gdpr:execute_erasure
+
+  BUREAUCRAT:
+    description: "Community governance manager handling user rights elevation and bot approvals"
+    level: 70
+    inherits: SYSOP
+    permissions:
+      - user:assign_role_rollbacker
+      - user:assign_role_editor
+      - user:assign_role_sysop
+      - user:rename_account
+      - bot:approve_bot_flag
+
+  SYSTEM_ADMIN:
+    description: "Root infrastructure and technical operations engineer"
+    level: 100
+    inherits: BUREAUCRAT
+    permissions:
+      - "*"
+
+page_protection_levels:
+  all:
+    allowed_roles: [ANONYMOUS, REGISTERED, AUTOCONFIRMED, ROLLBACKER, EDITOR, SYSOP, OVERSIGHT, BUREAUCRAT, SYSTEM_ADMIN]
+  autoconfirmed_only:
+    allowed_roles: [AUTOCONFIRMED, ROLLBACKER, EDITOR, SYSOP, OVERSIGHT, BUREAUCRAT, SYSTEM_ADMIN]
+  editor_only:
+    allowed_roles: [EDITOR, SYSOP, OVERSIGHT, BUREAUCRAT, SYSTEM_ADMIN]
+  sysop_only:
+    allowed_roles: [SYSOP, OVERSIGHT, BUREAUCRAT, SYSTEM_ADMIN]
+  system_locked:
+    allowed_roles: [SYSTEM_ADMIN]

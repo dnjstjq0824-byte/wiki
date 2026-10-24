@@ -1,0 +1,116 @@
+version: "1.0"
+platform: "Treewiki"
+description: "Complete UI Screen and Route Registry"
+
+screens:
+  - id: SCR-HOME-001
+    name: "Treewiki Home Portal"
+    route: "/"
+    layout: "DefaultLayout"
+    description: "Featured articles, portal navigation, trending topic trees, daily knowledge spotlight, and recent changes summary."
+    roles: [ALL]
+
+  - id: SCR-PAGE-001
+    name: "Article Reader View"
+    route: "/w/:title"
+    layout: "WikiArticleLayout"
+    description: "Rendered wiki article with hierarchical TOC, semantic infobox, category tags, footnote references, and action bar."
+    roles: [ALL]
+
+  - id: SCR-EDIT-001
+    name: "Split-Pane Wiki Editor"
+    route: "/edit/:title"
+    layout: "EditorLayout"
+    description: "Real-time dual-pane editor (Wikitext/Markdown) with live preview, syntax toolbar, edit summary input, and conflict merge banner."
+    roles: [ANONYMOUS, REGISTERED, AUTOCONFIRMED, ROLLBACKER, EDITOR, SYSOP, OVERSIGHT, BUREAUCRAT, SYSTEM_ADMIN]
+
+  - id: SCR-HIST-001
+    name: "Article Revision History"
+    route: "/history/:title"
+    layout: "DefaultLayout"
+    description: "Chronological list of all page revisions, author IP/username, byte delta changes, edit summaries, rollback button, and radio selector for diffs."
+    roles: [ALL]
+
+  - id: SCR-DIFF-001
+    name: "Side-by-Side Revision Diff Viewer"
+    route: "/diff/:title"
+    layout: "DefaultLayout"
+    description: "Visual side-by-side and inline tokenized diff comparing two specific revision hashes (additions in green, removals in red)."
+    roles: [ALL]
+
+  - id: SCR-TALK-001
+    name: "Threaded Talk & Discussion"
+    route: "/talk/:title"
+    layout: "DefaultLayout"
+    description: "Discussion forum associated with the page. Supports nested reply threads, RFC status markers, and consensus voting."
+    roles: [ALL]
+
+  - id: SCR-TREE-001
+    name: "Hierarchical Topic Tree Explorer"
+    route: "/tree/:node_id?"
+    layout: "FullBleedLayout"
+    description: "Interactive visual tree navigator showing knowledge taxonomy, prerequisite concept nodes, and interconnected branches."
+    roles: [ALL]
+
+  - id: SCR-GRAPH-001
+    name: "Knowledge Graph View"
+    route: "/graph/:title"
+    layout: "FullBleedLayout"
+    description: "Force-directed interactive network graph (D3.js) visualizing incoming and outgoing article links and semantic relationships."
+    roles: [ALL]
+
+  - id: SCR-SRCH-001
+    name: "Faceted Search Results"
+    route: "/search"
+    layout: "DefaultLayout"
+    description: "Lexical & trigram search results with snippet highlighting, namespace badges, sort order, and category facets."
+    roles: [ALL]
+
+  - id: SCR-CATG-001
+    name: "Category & Subcategory Index"
+    route: "/category/:name"
+    layout: "DefaultLayout"
+    description: "Alphabetic index of articles in this category, subcategory collapsible tree, and parent categories."
+    roles: [ALL]
+
+  - id: SCR-SPEC-001
+    name: "Special: Recent Changes Stream"
+    route: "/special/recent-changes"
+    layout: "DefaultLayout"
+    description: "Real-time live updating SSE feed of platform edits with byte delta, flags (New, Minor, Bot, Revert), and quick diff links."
+    roles: [ALL]
+
+  - id: SCR-SPEC-002
+    name: "Special: What Links Here"
+    route: "/special/what-links-here/:title"
+    layout: "DefaultLayout"
+    description: "Inverted backlink index showing all articles, templates, or redirects that link to the target page."
+    roles: [ALL]
+
+  - id: SCR-USER-001
+    name: "User Profile & Contributions"
+    route: "/user/:username"
+    layout: "DefaultLayout"
+    description: "User public profile, badge credentials, cumulative edit count, barnstar awards, and chronological contribution ledger."
+    roles: [ALL]
+
+  - id: SCR-USER-002
+    name: "User Watchlist"
+    route: "/user/watchlist"
+    layout: "DefaultLayout"
+    description: "Personalized watchlist showing recent modifications made to user-monitored articles and talk threads."
+    roles: [REGISTERED, AUTOCONFIRMED, ROLLBACKER, EDITOR, SYSOP, OVERSIGHT, BUREAUCRAT, SYSTEM_ADMIN]
+
+  - id: SCR-ADMN-001
+    name: "Sysop & Moderation Console"
+    route: "/admin"
+    layout: "AdminLayout"
+    description: "Administrative dashboard: page protection management, IP/account blocking, abuse filter regex rules, and audit logs."
+    roles: [SYSOP, OVERSIGHT, BUREAUCRAT, SYSTEM_ADMIN]
+
+  - id: SCR-ADMN-002
+    name: "Oversight & Legal Suppression Console"
+    route: "/admin/oversight"
+    layout: "AdminLayout"
+    description: "Strict legal erasure console for permanent suppression of PII, defamation, and copyrighted content from history."
+    roles: [OVERSIGHT, SYSTEM_ADMIN]

@@ -1,0 +1,16 @@
+Capability,Treewiki (Our Platform),Wikipedia (MediaWiki),Namuwiki (theseed),Confluence,Obsidian/GitBook
+Core Syntax Support,Hybrid Wikitext + GFM Markdown,Wikitext (Custom),theseed wikitext,Proprietary RichText,Markdown
+Hierarchical Topic Trees,Native DAG Taxonomy & Visual Tree,Manual Categories Only,Manual Categories Only,Page Hierarchy Tree,Folder/Tag Graph
+Immutable Revision History,Yes (SHA-256 Hash + Myers Diff),Yes (Linear Revisions),Yes (Linear Revisions),Yes (Basic Page History),Git / File History
+Interactive Knowledge Graph,Native Interactive D3.js Graph,External (Wikidata Query),No,No,Local Graph View
+Real-time Conflict Resolution,3-Way Merge & Line-by-Line UI,Edit Conflict Warning Page,Auto/Manual Overwrite,Real-time Co-editing (CRDT),Git Merge / Conflict File
+Namespace Separation,Yes (10+ Standard Namespaces),Yes (Standard MediaWiki),Yes (10+ Namespaces),Spaces & Permissions,Vault Folders
+Granular ACL & Protection,Multi-tier RBAC & Page Protection,Page Protection Levels,Page ACLs & ACL Groups,Space & Page Permissions,Local File Permissions
+Footnotes & Citations,<ref> + Auto Biblio + DOI/ISBN,<ref> + Cite Templates,Footnotes [1],Inline Comments Only,[^1] Footnotes
+Semantic Statements (RDF),Entity Properties (P/Q claims),Wikidata Extension Only,No,No,Dataview Plugin
+Media Upload & Scrubbing,S3/MinIO + Auto EXIF Scrub,Wikimedia Commons,Internal S3 Storage,Attachments,Local Media
+Search Engine,PostgreSQL FullText + pg_trgm + Meili,Elasticsearch (CirrusSearch),Elasticsearch,Lucene/Elasticsearch,Local Regex/Index
+Discussion System,Threaded RFC + Consensus Polling,Unstructured Talk Wiki Pages,Threaded Discussion (theseed),Inline Comments,Community Discord/Forum
+Vandalism Abuse Guard,Regex Filter + IP Block + SSE Feed,AbuseFilter + ClueBot NG,Live Monitoring & IP ACL,Audit Logs,None (Private)
+Performance & Architecture,Go Modular Monolith + Nuxt 3 SSR,PHP (Monolith + Extensions),Node.js (theseed engine),Java / Microservices,Electron / Client-only
+License & Rights Governance,CC BY-SA 4.0 + PIPA/GDPR Scrub,CC BY-SA 4.0,Proprietary / CC BY-NC-SA,Proprietary Corporate,Local File License

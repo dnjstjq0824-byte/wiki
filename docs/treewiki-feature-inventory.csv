@@ -1,0 +1,45 @@
+Feature_ID,Subsystem,Feature_Name,Description,User_Role,Complexity,Priority,Status
+FEAT-CW-01,CORE_WIKI,Namespace Architecture,Multi-namespace system (Main 0, Talk 1, User 2, Project 4, File 6, Template 10, Help 12, Category 14, TopicTree 20),All,High,P0,Draft
+FEAT-CW-02,CORE_WIKI,Page Title Normalization,Canonical slugification with Unicode NFKC normalization and underscore/space mapping,All,Medium,P0,Draft
+FEAT-CW-03,CORE_WIKI,Page Redirection Engine,Automatic and manual page alias redirects (#REDIRECT / #넘겨주기) with circular loop detection,All,Medium,P0,Draft
+FEAT-CW-04,CORE_WIKI,Backlink Discovery (WhatLinksHere),Inverted index tracking all incoming hyperlinks to any page or category,All,Medium,P1,Draft
+FEAT-CW-05,CORE_WIKI,Category & Subcategory Hierarchy,Multi-parent category DAG navigation with automated member listing,All,Medium,P1,Draft
+FEAT-RC-01,REVISION_CONTROL,Append-Only Immutable Revisions,Cryptographically hashed (SHA-256) immutable revision records preserving 100% edit history,All,High,P0,Draft
+FEAT-RC-02,REVISION_CONTROL,Side-by-Side & Unified Diff Engine,Tokenized word-level and line-level diff viewer using Myers diff algorithm,All,High,P0,Draft
+FEAT-RC-03,REVISION_CONTROL,One-Click Rollback,Rapid vandalism restoration reverting consecutive edits by the same author to previous revision,Rollbacker,Medium,P1,Draft
+FEAT-RC-04,REVISION_CONTROL,Optimistic Concurrency & Conflict Merge,Three-way text merge detecting concurrent revisions with line-level conflict resolution UI,Editor,High,P0,Draft
+FEAT-RC-05,REVISION_CONTROL,Edit Summary & Change Tags,Mandatory/optional edit notes with automated tagging (bot, mobile, minor edit, revert),All,Low,P0,Draft
+FEAT-EP-01,EDITOR_PARSER,Hybrid Wikitext & Extended Markdown AST,Dual-syntax AST parser supporting GFM Markdown and MediaWiki/Namuwiki style link/macro tags,All,High,P0,Draft
+FEAT-EP-02,EDITOR_PARSER,Automated Table of Contents (TOC),Recursive heading extractor (H1-H6) generating clickable nested TOC with collapsible view,All,Medium,P0,Draft
+FEAT-EP-03,EDITOR_PARSER,Footnote & Citation Engine,Inline references (<ref>) with automated bibliography grouping and doi/isbn formatting,All,Medium,P0,Draft
+FEAT-EP-04,EDITOR_PARSER,LaTeX Math Rendering (KaTeX),Fast client and server-side mathematical formula rendering using LaTeX KaTeX blocks,All,Low,P1,Draft
+FEAT-EP-05,EDITOR_PARSER,Infobox & Template Macro Engine,Reusable parametric templates and customizable infobox widgets with schema enforcement,All,High,P0,Draft
+FEAT-EP-06,EDITOR_PARSER,Split-Pane Live Markdown/Wiki Editor,Synchronized scroll editor with formatting toolbars and instant HTML preview,Editor,Medium,P0,Draft
+FEAT-TT-01,TOPIC_TREE,Hierarchical Knowledge Taxonomy,Polyhierarchical topic tree structuring subjects from broad domains down to niche concepts,All,High,P0,Draft
+FEAT-TT-02,TOPIC_TREE,Interactive Knowledge Graph Visualization,Interactive force-directed and radial tree graph (D3.js) showing conceptual relationships,All,High,P1,Draft
+FEAT-TT-03,TOPIC_TREE,Topic Node Entity Binding,Associating wiki articles to semantic topic tree nodes with depth, weight, and prerequisite levels,Editor,Medium,P1,Draft
+FEAT-TT-04,TOPIC_TREE,Curated Learning Path / Breadcrumb,Linear and branchable reading paths navigating through foundational prerequisite concepts,All,Medium,P2,Draft
+FEAT-SD-01,SEARCH_DISCOVERY,PostgreSQL Full-Text & Trigram Search,Combined tsvector lexical ranking and pg_trgm similarity search with typo tolerance,All,High,P0,Draft
+FEAT-SD-02,SEARCH_DISCOVERY,Real-Time Title Autocomplete,Debounced prefix-matching instant search modal displaying namespace badge and snippet,All,Medium,P0,Draft
+FEAT-SD-03,SEARCH_DISCOVERY,Faceted Search Filters,Search refinement by namespace, category, last edited date range, and author reputation,All,Medium,P1,Draft
+FEAT-SD-04,SEARCH_DISCOVERY,Random Article Explorer,Balanced pseudo-random page selector with namespace and minimum content length filters,All,Low,P2,Draft
+FEAT-DT-01,DISCUSSION_TALK,Threaded Discussion (Talk Page),Hierarchical talk topic threads associated with every article, supporting status flags (Open, Closed, Resolved),All,High,P0,Draft
+FEAT-DT-02,DISCUSSION_TALK,Consensus Polling & RFC,Structured community voting widget with duration, quorum, and majority rule evaluation,Registered,Medium,P1,Draft
+FEAT-DT-03,DISCUSSION_TALK,User Mention & Real-time Notification,In-app and SSE notification pinging users when mentioned in talk pages or revision summaries,Registered,Medium,P1,Draft
+FEAT-CG-01,COMMUNITY_GOVERNANCE,Granular RBAC & Permission Matrix,Role-based access (Anonymous, User, AutoConfirmed, Rollbacker, Editor, Sysop, Bureaucrat),All,High,P0,Draft
+FEAT-CG-02,COMMUNITY_GOVERNANCE,Page Protection Levels,Access restriction (unprotected, autoconfirmed-only, sysop-only, edit-protected, move-protected),Sysop,Medium,P0,Draft
+FEAT-CG-03,COMMUNITY_GOVERNANCE,Abuse Filter & Regex Guard,Automated real-time inspection blocking mass deletions, blacklisted URLs, and hate speech,System,High,P0,Draft
+FEAT-CG-04,COMMUNITY_GOVERNANCE,IP & Account Blocking Engine,Temporary and permanent block enforcement supporting CIDR IP range and proxy/VPN checks,Sysop,High,P0,Draft
+FEAT-CG-05,COMMUNITY_GOVERNANCE,Special:RecentChanges Feed,Live Server-Sent Events (SSE) stream of global edits with change size delta (+/- bytes),All,Medium,P0,Draft
+FEAT-CG-06,COMMUNITY_GOVERNANCE,User Watchlist & Starred Pages,Personalized feed tracking changes to monitored documents and talk discussions,Registered,Medium,P1,Draft
+FEAT-AM-01,ASSET_MEDIA,S3-Compatible Media Asset Storage,Upload pipeline storing assets in MinIO/S3 with SHA-256 deduplication and mime verification,Registered,High,P0,Draft
+FEAT-AM-02,ASSET_MEDIA,Automated EXIF Scrubbing & Privacy Guard,Stripping geolocation and camera serial identifiers from uploaded JPEG/PNG photos,System,Medium,P0,Draft
+FEAT-AM-03,ASSET_MEDIA,Dynamic Image Resizing & WebP Conversion,On-demand thumbnail generation with WebP/AVIF progressive streaming,System,Medium,P1,Draft
+FEAT-AM-04,ASSET_MEDIA,SVG Sanitizer (DOMPurify/XML Sec),Strict XML DOM purification removing script tags, event handlers, and remote entity exploits,System,High,P0,Draft
+FEAT-SM-01,SEMANTIC_DATA,Property-Value Statement Engine,Wikidata-style entity claims (Property ID -> Target Value / Entity Link / Quantity / Date),Editor,High,P1,Draft
+FEAT-SM-02,SEMANTIC_DATA,Infobox Auto-Binding,Automatic generation of infobox tables by fetching bound semantic property statements,All,Medium,P1,Draft
+FEAT-SM-03,SEMANTIC_DATA,Structured Query (Ask/Query API),SQL-like query filtering pages based on semantic properties (e.g. Category=Scientist AND BirthYear<1900),All,High,P2,Draft
+FEAT-AO-01,ADMIN_OPS,Oversight & Revision Deletion,Selective masking of defamatory, PII, or copyright-violating revisions from public view,Oversight,High,P0,Draft
+FEAT-AO-02,ADMIN_OPS,System Audit Log Viewer,Comprehensive immutable audit trail of all administrative actions (block, protect, delete, rename),Sysop,Medium,P0,Draft
+FEAT-AO-03,ADMIN_OPS,XML/JSON Dump Export & Import Engine,High-throughput batch export/import matching standard Wiki dump formats for backup and portability,Sysop,High,P1,Draft
+FEAT-AO-04,ADMIN_OPS,Maintenance Batch Runner,Scheduled background workers for updating link tables, cleaning dead redirects, and reindexing search,System,Medium,P1,Draft

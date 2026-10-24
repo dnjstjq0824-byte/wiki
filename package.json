@@ -1,0 +1,21 @@
+{
+  "name": "treewiki-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Treewiki - Global Collaborative Knowledge & Topic Tree Wiki Platform",
+  "author": "dnjstjqppk-dev <dnjstjqppk@gmail.com>",
+  "license": "CC-BY-SA-4.0",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "typescript": "^5.5.0",
+    "prettier": "^3.3.0"
+  },
+  "packageManager": "pnpm@9.0.0"
+}

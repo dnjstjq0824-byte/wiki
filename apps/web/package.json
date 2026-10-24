@@ -1,0 +1,24 @@
+{
+  "name": "@treewiki/web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "vue": "^3.4.30",
+    "vue-router": "^4.3.3",
+    "pinia": "^2.1.7",
+    "lucide-vue-next": "^0.395.0"
+  },
+  "devDependencies": {
+    "nuxt": "^3.12.0",
+    "@nuxtjs/tailwindcss": "^6.12.0",
+    "typescript": "^5.5.0"
+  }
+}

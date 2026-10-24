@@ -1,0 +1,160 @@
+openapi: 3.0.3
+info:
+  title: Treewiki Core REST API
+  description: High-performance collaborative knowledge & topic tree platform API specification.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local development server
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, email, password]
+              properties:
+                username: { type: string, minLength: 3, maxLength: 32 }
+                email: { type: string, format: email }
+                password: { type: string, minLength: 8 }
+      responses:
+        '201':
+          description: User registered successfully
+        '400':
+          description: Invalid input or username/email duplicate
+
+  /auth/login:
+    post:
+      summary: Authenticate user and receive JWT session cookie
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: { type: string }
+                password: { type: string }
+      responses:
+        '200':
+          description: Authentication successful with Set-Cookie
+        '401':
+          description: Invalid credentials
+
+  /pages/{namespace}/{slug}:
+    get:
+      summary: Get page content, metadata, and rendered HTML
+      parameters:
+        - name: namespace
+          in: path
+          required: true
+          schema: { type: string }
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Page retrieved successfully
+        '404':
+          description: Page not found (Red Link)
+    put:
+      summary: Create or update page revision
+      parameters:
+        - name: namespace
+          in: path
+          required: true
+          schema: { type: string }
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+        - name: If-Match
+          in: header
+          description: ETag / SHA-256 hash of parent revision for optimistic concurrency
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [wikitext, summary]
+              properties:
+                wikitext: { type: string }
+                summary: { type: string, maxLength: 500 }
+                is_minor: { type: boolean, default: false }
+      responses:
+        '200':
+          description: Revision created successfully
+        '409':
+          description: Edit conflict detected (3-way merge required)
+
+  /pages/{namespace}/{slug}/history:
+    get:
+      summary: Retrieve chronological revision history of a page
+      parameters:
+        - name: namespace
+          in: path
+          required: true
+          schema: { type: string }
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50 }
+      responses:
+        '200':
+          description: List of revision summaries
+
+  /revisions/diff:
+    get:
+      summary: Compute tokenized line and word diff between two revisions
+      parameters:
+        - name: from_id
+          in: query
+          required: true
+          schema: { type: string, format: uuid }
+        - name: to_id
+          in: query
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Myers diff token array with line numbers and added/deleted blocks
+
+  /topic-tree:
+    get:
+      summary: Get complete or sub-branched topic taxonomy tree
+      parameters:
+        - name: root_node_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: max_depth
+          in: query
+          schema: { type: integer, default: 3 }
+      responses:
+        '200':
+          description: Hierarchical DAG node and edge network
+
+  /search:
+    get:
+      summary: Full-text and trigram fuzzy search
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema: { type: string }
+        - name: namespace
+          in: query
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Ranked search results with highlights and snippets

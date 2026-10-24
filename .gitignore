@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+vendor/
+
+# Build outputs
+dist/
+.output/
+.nuxt/
+bin/
+*.exe
+
+# Logs & temp
+*.log
+.DS_Store
+Thumbs.db
+.turbo/
+.cache/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
