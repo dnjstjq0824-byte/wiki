@@ -1,6 +1,5 @@
 // apps/web/stores/auth.ts
-import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { computed, reactive } from 'vue'
 
 export interface UserProfile {
   id: string
@@ -11,10 +10,10 @@ export interface UserProfile {
   avatar_url?: string
 }
 
-export const useAuthStore = defineStore('auth', () => {
-  const user = ref<UserProfile | null>(null)
-  const token = ref<string | null>(null)
-  const isLoaded = ref(false)
+export const useAuthStore = () => {
+  const user = useState<UserProfile | null>('auth_user', () => null)
+  const token = useState<string | null>('auth_token', () => null)
+  const isLoaded = useState<boolean>('auth_is_loaded', () => false)
 
   const isAuthenticated = computed(() => !!user.value)
   const userRole = computed(() => user.value?.role || 'ANONYMOUS')
@@ -53,7 +52,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  return {
+  return reactive({
     user,
     token,
     isLoaded,
@@ -62,6 +61,5 @@ export const useAuthStore = defineStore('auth', () => {
     setAuth,
     clearAuth,
     initAuth,
-  }
-})
-
+  })
+}

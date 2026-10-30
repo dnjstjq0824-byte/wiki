@@ -65,7 +65,7 @@
         <div v-if="authStore.isAuthenticated" class="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-800">
           <div class="flex items-center gap-1.5">
             <span class="w-6 h-6 rounded-full bg-forest-600 text-white flex items-center justify-center font-bold text-[10px]">
-              {{ authStore.user?.username.charAt(0).toUpperCase() }}
+              {{ (authStore.user?.username || 'U').charAt(0).toUpperCase() }}
             </span>
             <span class="text-xs font-bold text-slate-700 dark:text-slate-200">
               {{ authStore.user?.username }}

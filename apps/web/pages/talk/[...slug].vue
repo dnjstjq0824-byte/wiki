@@ -202,7 +202,7 @@
               <div class="flex items-center justify-between text-xs">
                 <span class="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                   <span class="w-5 h-5 rounded-full bg-forest-600 text-white flex items-center justify-center text-[10px]">
-                    {{ comment.author_id.charAt(0).toUpperCase() }}
+                    {{ (comment.author_id || '?').charAt(0).toUpperCase() }}
                   </span>
                   {{ comment.author_id }}
                 </span>

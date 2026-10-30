@@ -13,7 +13,6 @@
   "dependencies": {
     "vue": "^3.4.30",
     "vue-router": "^4.3.3",
-    "pinia": "^2.1.7",
     "lucide-vue-next": "^0.395.0"
   },
   "devDependencies": {
