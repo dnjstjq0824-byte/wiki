@@ -5,6 +5,9 @@ export default defineNuxtConfig({
   modules: [
     '@nuxtjs/tailwindcss'
   ],
+  nitro: {
+    preset: process.env.NITRO_PRESET || 'cloudflare-module'
+  },
   app: {
     head: {
       title: 'Treewiki - Collaborative Knowledge Platform',

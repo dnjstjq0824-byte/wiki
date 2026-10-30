@@ -1,0 +1,11 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "treewiki",
+  "compatibility_date": "2024-04-03",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "./apps/web/.output/server/index.mjs",
+  "assets": {
+    "directory": "./apps/web/.output/public",
+    "binding": "ASSETS"
+  }
+}
