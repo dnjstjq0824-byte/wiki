@@ -30,3 +30,4 @@ Content-Security-Policy: default-src 'self';
   base-uri 'self';
   form-action 'self';
 ```
+

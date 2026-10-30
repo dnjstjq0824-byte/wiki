@@ -55,3 +55,4 @@ The parser receives raw wikitext/markdown and executes a multi-phase compilation
 - Topics are stored as nodes (`topic_nodes`) and edges (`topic_edges`).
 - Traversal queries use PostgreSQL Common Table Expressions (`WITH RECURSIVE`) to retrieve ancestor and descendant topic chains.
 - Prevents cyclic dependencies using topological cycle detection on edge insertion.
+

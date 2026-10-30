@@ -114,3 +114,4 @@ page_protection_levels:
     allowed_roles: [SYSOP, OVERSIGHT, BUREAUCRAT, SYSTEM_ADMIN]
   system_locked:
     allowed_roles: [SYSTEM_ADMIN]
+

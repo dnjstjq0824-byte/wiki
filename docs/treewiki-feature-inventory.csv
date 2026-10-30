@@ -43,3 +43,4 @@ FEAT-AO-01,ADMIN_OPS,Oversight & Revision Deletion,Selective masking of defamato
 FEAT-AO-02,ADMIN_OPS,System Audit Log Viewer,Comprehensive immutable audit trail of all administrative actions (block, protect, delete, rename),Sysop,Medium,P0,Draft
 FEAT-AO-03,ADMIN_OPS,XML/JSON Dump Export & Import Engine,High-throughput batch export/import matching standard Wiki dump formats for backup and portability,Sysop,High,P1,Draft
 FEAT-AO-04,ADMIN_OPS,Maintenance Batch Runner,Scheduled background workers for updating link tables, cleaning dead redirects, and reindexing search,System,Medium,P1,Draft
+

@@ -14,3 +14,4 @@ Discussion System,Threaded RFC + Consensus Polling,Unstructured Talk Wiki Pages,
 Vandalism Abuse Guard,Regex Filter + IP Block + SSE Feed,AbuseFilter + ClueBot NG,Live Monitoring & IP ACL,Audit Logs,None (Private)
 Performance & Architecture,Go Modular Monolith + Nuxt 3 SSR,PHP (Monolith + Extensions),Node.js (theseed engine),Java / Microservices,Electron / Client-only
 License & Rights Governance,CC BY-SA 4.0 + PIPA/GDPR Scrub,CC BY-SA 4.0,Proprietary / CC BY-NC-SA,Proprietary Corporate,Local File License
+

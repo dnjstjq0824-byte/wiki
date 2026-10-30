@@ -158,3 +158,4 @@ paths:
       responses:
         '200':
           description: Ranked search results with highlights and snippets
+

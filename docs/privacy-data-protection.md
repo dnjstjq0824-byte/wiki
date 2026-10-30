@@ -41,3 +41,4 @@ However, personal account data is scrubbed:
 - `users.username` -> Renamed to `FormerUser_<UUID>`
 - `users.profile_bio` -> NULL
 - All tracking cookies and device session tokens are invalidated.
+

@@ -77,3 +77,4 @@ const majorTrees = [
   { name: 'Philosophy & Ethics', slug: 'Philosophy', icon: '🏛️', count: '640' }
 ]
 </script>
+

@@ -40,3 +40,4 @@ Also here is a citation<ref>Nature Journal 2026</ref>.
 		t.Errorf("Expected reference in HTML, got: %s", res.HTML)
 	}
 }
+

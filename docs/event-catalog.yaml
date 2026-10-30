@@ -115,3 +115,4 @@ events:
       actor_ip: "string"
       actor_id: "UUID?"
       matched_content: "string (truncated)"
+

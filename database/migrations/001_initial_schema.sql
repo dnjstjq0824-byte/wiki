@@ -343,3 +343,9 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 
 CREATE INDEX idx_audit_logs_action ON audit_logs (action_type);
 CREATE INDEX idx_audit_logs_created ON audit_logs (created_at DESC);
+
+-- Full-text search support (tsvector + pg_trgm)
+ALTER TABLE pages ADD COLUMN IF NOT EXISTS search_vector tsvector;
+CREATE INDEX IF NOT EXISTS idx_pages_search_vector ON pages USING gin (search_vector);
+CREATE INDEX IF NOT EXISTS idx_pages_title_trgm ON pages USING gin (title gin_trgm_ops);
+

@@ -76,3 +76,4 @@ volumes:
   redis_data:
   minio_data:
   meilisearch_data:
+

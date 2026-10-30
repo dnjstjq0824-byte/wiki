@@ -104,3 +104,4 @@ message GetTopicTreeRequest {
 message GetTopicTreeResponse {
   repeated TopicNode nodes = 1;
 }
+

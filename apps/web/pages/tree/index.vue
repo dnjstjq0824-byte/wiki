@@ -1,23 +1,62 @@
+<!-- apps/web/pages/tree/index.vue -->
 <template>
   <div class="space-y-6">
     <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
-      <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 mb-6">
+      <!-- Title & Tab Bar -->
+      <div class="flex flex-wrap items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 mb-6 gap-4">
         <div>
           <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
             <span>🌲</span> Topic Tree Knowledge Taxonomy
           </h1>
           <p class="text-xs text-slate-500">Directed Acyclic Graph (DAG) visualizing prerequisite relationships and topic hierarchies</p>
         </div>
-        <div class="text-xs font-semibold px-3 py-1 rounded-full bg-forest-50 dark:bg-slate-800 text-forest-700 dark:text-forest-400 border border-forest-200 dark:border-forest-800">
-          Root: Human Knowledge
+
+        <!-- View Switcher -->
+        <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg text-xs font-semibold">
+          <button
+            @click="activeTab = 'graph'"
+            :class="activeTab === 'graph' ? 'bg-white dark:bg-slate-700 text-forest-700 dark:text-forest-400 shadow-xs' : 'text-slate-600 dark:text-slate-400'"
+            class="px-3 py-1.5 rounded-md transition flex items-center gap-1.5"
+          >
+            <span>🕸️</span> Network Graph
+          </button>
+          <button
+            @click="activeTab = 'tree'"
+            :class="activeTab === 'tree' ? 'bg-white dark:bg-slate-700 text-forest-700 dark:text-forest-400 shadow-xs' : 'text-slate-600 dark:text-slate-400'"
+            class="px-3 py-1.5 rounded-md transition flex items-center gap-1.5"
+          >
+            <span>🌳</span> Hierarchy Tree
+          </button>
+          <button
+            @click="activeTab = 'directory'"
+            :class="activeTab === 'directory' ? 'bg-white dark:bg-slate-700 text-forest-700 dark:text-forest-400 shadow-xs' : 'text-slate-600 dark:text-slate-400'"
+            class="px-3 py-1.5 rounded-md transition flex items-center gap-1.5"
+          >
+            <span>📋</span> Topic Directory
+          </button>
         </div>
       </div>
 
-      <!-- Tree Nodes Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Tab 1: Force-Directed Knowledge Graph -->
+      <div v-if="activeTab === 'graph'">
+        <ForceDirectedGraph />
+      </div>
+
+      <!-- Tab 2: D3 Hierarchy Tree Viewer -->
+      <div v-else-if="activeTab === 'tree'">
+        <D3TreeViewer />
+      </div>
+
+      <!-- Tab 3: Topic Directory Grid -->
+      <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Interactive Hierarchy Column -->
         <div class="md:col-span-2 border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-slate-50/50 dark:bg-slate-950/40 space-y-3">
-          <div v-for="node in nodes" :key="node.id" class="p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs cursor-pointer hover:border-forest-500 transition" @click="selectNode(node)">
+          <div
+            v-for="node in nodes"
+            :key="node.id"
+            class="p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs cursor-pointer hover:border-forest-500 transition"
+            @click="selectNode(node)"
+          >
             <div class="flex items-center justify-between mb-1">
               <span class="font-bold text-sm text-slate-800 dark:text-slate-200 flex items-center gap-2">
                 <span>{{ node.icon }}</span> {{ node.title }}
@@ -67,6 +106,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
+const activeTab = ref<'graph' | 'tree' | 'directory'>('graph')
+
 interface NodeItem {
   id: string
   title: string
@@ -85,7 +126,7 @@ const nodes: NodeItem[] = [
     depth: 1,
     description: 'Study of algorithmic computation, hardware/software systems, and information architectures.',
     children: ['Algorithms & Data Structures', 'Quantum Computing', 'Distributed Systems', 'Cryptography'],
-    articles: ['Computer Science', 'Quantum Computing', 'Turing Machine', 'Time Complexity']
+    articles: ['Computer Science', 'Quantum Computing', 'Turing Machine', 'Time Complexity'],
   },
   {
     id: 'math',
@@ -94,7 +135,7 @@ const nodes: NodeItem[] = [
     depth: 1,
     description: 'Abstract science of numbers, quantity, geometry, spaces, and logical transformations.',
     children: ['Calculus & Analysis', 'Linear Algebra', 'Graph Theory', 'Abstract Algebra'],
-    articles: ['Mathematics', 'Linear Algebra', 'Euler Characteristic']
+    articles: ['Mathematics', 'Linear Algebra', 'Euler Characteristic'],
   },
   {
     id: 'phys',
@@ -103,8 +144,8 @@ const nodes: NodeItem[] = [
     depth: 1,
     description: 'Empirical natural science exploring matter, energy, spacetime, and fundamental forces.',
     children: ['Quantum Mechanics', 'General Relativity', 'Thermodynamics', 'Electromagnetism'],
-    articles: ['Physics', 'Quantum Mechanics', 'Special Relativity']
-  }
+    articles: ['Physics', 'Quantum Mechanics', 'Special Relativity'],
+  },
 ]
 
 const selectedNode = ref<NodeItem | null>(nodes[0])

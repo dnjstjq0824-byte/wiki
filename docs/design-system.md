@@ -49,3 +49,4 @@ The visual interface emphasizes crisp typography, high informational density wit
 ### 4.3 Footnotes & Reference Accordion
 - Hover tooltip showing citation title, author, and external link.
 - Clicking reference indicator jumps to bottom bibliography with backlink return indicator (`^`).
+
