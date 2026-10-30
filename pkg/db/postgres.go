@@ -76,3 +76,4 @@ func (db *DB) Migrate(schemaPath string) error {
 	log.Println("[Database] Migration applied successfully:", schemaPath)
 	return nil
 }
+

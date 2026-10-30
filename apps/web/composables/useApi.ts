@@ -55,3 +55,4 @@ export const useApi = () => {
       request<T>(endpoint, { method: 'DELETE', headers }),
   }
 }
+

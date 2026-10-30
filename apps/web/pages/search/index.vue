@@ -278,3 +278,4 @@ watch(() => route.query.q, (newQ) => {
   }
 })
 </script>
+
