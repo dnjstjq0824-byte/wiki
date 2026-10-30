@@ -8,12 +8,19 @@ import (
 	"github.com/dnjstjqppk-dev/treewiki/services/identity"
 )
 
+type PageSaveCallback func(page *Page, isUpdate bool)
+
 type Handler struct {
-	service *WikiService
+	service    *WikiService
+	onPageSave PageSaveCallback
 }
 
 func NewHandler(service *WikiService) *Handler {
 	return &Handler{service: service}
+}
+
+func (h *Handler) SetOnPageSave(cb PageSaveCallback) {
+	h.onPageSave = cb
 }
 
 func parseNamespaceParam(s string) Namespace {
@@ -76,11 +83,17 @@ func (h *Handler) PutPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := identity.GetUserContext(r)
-	authorID := ctx.UserID
-	userRole := ctx.Role
+	authorID := ctx.Username
+	if authorID == "" {
+		authorID = ctx.UserID
+	}
+	if authorID == "" {
+		authorID = ctx.MaskedIP
+	}
 	if authorID == "" {
 		authorID = "anonymous"
 	}
+	userRole := ctx.Role
 
 	var body struct {
 		Wikitext     string `json:"wikitext"`
@@ -107,6 +120,9 @@ func (h *Handler) PutPage(w http.ResponseWriter, r *http.Request) {
 			h.writeErr(w, http.StatusBadRequest, err.Error())
 			return
 		}
+		if h.onPageSave != nil {
+			h.onPageSave(page, false)
+		}
 		h.writeJSON(w, http.StatusCreated, page)
 		return
 	}
@@ -124,6 +140,9 @@ func (h *Handler) PutPage(w http.ResponseWriter, r *http.Request) {
 		}
 		h.writeErr(w, http.StatusBadRequest, err.Error())
 		return
+	}
+	if h.onPageSave != nil {
+		h.onPageSave(page, true)
 	}
 	h.writeJSON(w, http.StatusOK, page)
 }

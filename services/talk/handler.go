@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/dnjstjqppk-dev/treewiki/services/identity"
 )
 
 type Handler struct {
@@ -33,6 +35,18 @@ func (h *Handler) CreateThread(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		h.writeErr(w, http.StatusBadRequest, "invalid json")
 		return
+	}
+	if body.AuthorID == "" {
+		ctx := identity.GetUserContext(r)
+		if ctx.Username != "" {
+			body.AuthorID = ctx.Username
+		} else if ctx.UserID != "" {
+			body.AuthorID = ctx.UserID
+		} else if ctx.MaskedIP != "" {
+			body.AuthorID = ctx.MaskedIP
+		} else {
+			body.AuthorID = "anonymous"
+		}
 	}
 	t, err := h.service.CreateThread(body.PageKey, body.Title, body.AuthorID)
 	if err != nil {
@@ -73,6 +87,18 @@ func (h *Handler) AddComment(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		h.writeErr(w, http.StatusBadRequest, "invalid json")
 		return
+	}
+	if body.AuthorID == "" {
+		ctx := identity.GetUserContext(r)
+		if ctx.Username != "" {
+			body.AuthorID = ctx.Username
+		} else if ctx.UserID != "" {
+			body.AuthorID = ctx.UserID
+		} else if ctx.MaskedIP != "" {
+			body.AuthorID = ctx.MaskedIP
+		} else {
+			body.AuthorID = "anonymous"
+		}
 	}
 	c, err := h.service.AddComment(threadID, body.ParentID, body.AuthorID, body.Content)
 	if err != nil {

@@ -32,19 +32,20 @@
           <span class="text-xs text-slate-400">CC BY-SA 4.0</span>
         </div>
         <h2 class="text-2xl font-bold text-slate-900 dark:text-slate-100">
-          <NuxtLink to="/w/Quantum_Computing" class="hover:text-forest-600 transition">
-            Quantum Computing
+          <NuxtLink to="/w/Computer_Science" class="hover:text-forest-600 transition">
+            Computer Science & Algorithmic Foundations
           </NuxtLink>
         </h2>
         <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-          Quantum computing is a rapidly-emerging technology that harnesses the laws of quantum mechanics to solve problems too complex for classical computers. By utilizing superposition and entanglement, qubits process multidimensional computational spaces at exponential scale...
+          Computer Science is the systematic study of computation, information processing, and algorithmic structures. From Myers diff sequence comparison to Directed Acyclic Graph (DAG) taxonomies, explore how modern knowledge representations are built...
         </p>
         <div class="flex items-center justify-between pt-2">
           <div class="flex gap-2">
-            <span class="px-2 py-0.5 rounded text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">Physics</span>
-            <span class="px-2 py-0.5 rounded text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">Computation</span>
+            <span class="px-2 py-0.5 rounded text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">Theory</span>
+            <span class="px-2 py-0.5 rounded text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">Algorithms</span>
+            <span class="px-2 py-0.5 rounded text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">Taxonomy</span>
           </div>
-          <NuxtLink to="/w/Quantum_Computing" class="text-xs font-semibold text-forest-600 dark:text-forest-400 hover:underline">
+          <NuxtLink to="/w/Computer_Science" class="text-xs font-semibold text-forest-600 dark:text-forest-400 hover:underline">
             Read full article →
           </NuxtLink>
         </div>

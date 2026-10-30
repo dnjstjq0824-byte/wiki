@@ -20,13 +20,6 @@
           <p class="text-xs text-slate-500">Live synchronized dual-syntax Wikitext & Extended Markdown editor</p>
         </div>
         <div class="flex items-center gap-2">
-          <button
-            @click="simulateConflict"
-            class="text-[11px] px-2 py-1 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-400 hover:bg-amber-200 font-medium"
-            title="Simulate peer edit conflict"
-          >
-            ⚡ Test Conflict UI
-          </button>
           <NuxtLink :to="`/w/${slug}`" class="text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200">
             ✕ Cancel
           </NuxtLink>
@@ -38,6 +31,10 @@
 
       <!-- Edit Summary & Save Action -->
       <div class="pt-4 border-t border-slate-200 dark:border-slate-800 space-y-3">
+        <div v-if="saveError" class="p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-xs text-rose-700 dark:text-rose-300">
+          {{ saveError }}
+        </div>
+
         <div>
           <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
             Edit Summary (Briefly describe your changes)
@@ -61,9 +58,10 @@
             </NuxtLink>
             <button
               @click="handleSave"
-              class="px-6 py-2 rounded-lg bg-forest-600 hover:bg-forest-500 text-white font-bold text-xs shadow-sm transition"
+              :disabled="saving"
+              class="px-6 py-2 rounded-lg bg-forest-600 hover:bg-forest-500 text-white font-bold text-xs shadow-sm transition disabled:opacity-50"
             >
-              Publish Revision
+              {{ saving ? 'Publishing...' : 'Publish Revision' }}
             </button>
           </div>
         </div>
@@ -73,11 +71,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useApi } from '../../composables/useApi'
 
 const route = useRoute()
 const router = useRouter()
+const api = useApi()
 
 const slug = computed(() => {
   const p = route.params.slug
@@ -96,29 +96,66 @@ const sourceContent = ref(`== Overview ==
 [[Category:General Knowledge]]
 `)
 
-const serverContent = ref(`== Overview ==
-'''${displayTitle.value}''' is a computational and mathematical science domain.
-Concurrent update by server editor.
-
-[[Category:Science]]
-`)
-
+const serverContent = ref('')
+const parentHash = ref('')
 const hasConflict = ref(false)
 const summary = ref('')
 const isMinor = ref(false)
+const saving = ref(false)
+const saveError = ref('')
 
-const simulateConflict = () => {
-  hasConflict.value = true
+const fetchInitialContent = async () => {
+  try {
+    const res: any = await api.get(`/pages/0/${slug.value}`)
+    const page = res?.page || (res?.title ? res : null)
+    if (page && page.content) {
+      sourceContent.value = page.content
+      parentHash.value = page.current_revision_id || ''
+    }
+  } catch {
+    // New page: keep default template
+  }
 }
 
 const onConflictResolved = (mergedText: string) => {
   sourceContent.value = mergedText
   hasConflict.value = false
-  alert('Edit conflict resolved! Ready to publish.')
 }
 
-const handleSave = () => {
-  alert('Revision successfully recorded to immutable ledger!')
-  router.push(`/w/${slug.value}`)
+const handleSave = async () => {
+  saving.value = true
+  saveError.value = ''
+
+  try {
+    const headers: Record<string, string> = {}
+    if (parentHash.value) {
+      headers['If-Match'] = parentHash.value
+    }
+
+    await api.put(
+      `/pages/0/${slug.value}`,
+      {
+        wikitext: sourceContent.value,
+        summary: summary.value || 'Updated page content',
+        is_minor: isMinor.value,
+      },
+      headers
+    )
+
+    router.push(`/w/${slug.value}`)
+  } catch (err: any) {
+    if (err.status === 409 || err.statusCode === 409) {
+      serverContent.value = err.data?.latest_content || 'Concurrent update occurred.'
+      hasConflict.value = true
+    } else {
+      saveError.value = err.data?.error || err.message || 'Failed to save revision. Please ensure you are signed in.'
+    }
+  } finally {
+    saving.value = false
+  }
 }
+
+onMounted(() => {
+  fetchInitialContent()
+})
 </script>

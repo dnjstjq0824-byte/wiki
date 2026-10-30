@@ -95,3 +95,4 @@ func TestGovernanceFiltersAndBlocks(t *testing.T) {
 		t.Errorf("expected 1 recent change, got %d", len(rcs))
 	}
 }
+

@@ -23,3 +23,4 @@ func TestConfigLoad(t *testing.T) {
 		t.Errorf("expected custom JWTSecret, got %s", cfg.JWTSecret)
 	}
 }
+

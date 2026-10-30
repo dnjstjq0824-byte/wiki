@@ -22,3 +22,4 @@ func TestCompressDecompress(t *testing.T) {
 		t.Errorf("Decompressed bytes do not match original! Got %s", string(decompressed))
 	}
 }
+
