@@ -1,7 +1,7 @@
 <!-- apps/web/pages/search/index.vue -->
 <template>
   <div>
-    <h1 class="font-wiki text-3xl text-slate-900 dark:text-slate-100 border-b border-wiki-border dark:border-slate-700 pb-1">
+    <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100 border-b-2 border-namu-600 dark:border-namu-500 pb-1">
       Search
     </h1>
 
@@ -12,7 +12,7 @@
         v-model="query"
         type="text"
         placeholder="Search articles, algorithms, topics, or wikitext..."
-        class="flex-1 px-2.5 py-1.5 text-sm border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-wiki-link"
+        class="flex-1 px-2.5 py-1.5 text-sm border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-namu-600"
       />
       <button
         type="submit"
@@ -56,7 +56,7 @@
 
     <!-- No Results -->
     <div v-else-if="results.length === 0" class="text-sm">
-      <h2 class="font-wiki text-xl text-slate-900 dark:text-slate-100">No results for “{{ query }}”</h2>
+      <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100">No results for “{{ query }}”</h2>
       <p class="text-slate-600 dark:text-slate-400 mt-1">There is no page with this title or content in the selected namespace.</p>
       <p class="mt-3">
         <NuxtLink

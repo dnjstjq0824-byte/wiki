@@ -1,14 +1,14 @@
 <!-- apps/web/pages/admin/index.vue -->
 <template>
   <div>
-    <h1 class="font-wiki text-3xl text-slate-900 dark:text-slate-100 border-b border-wiki-border dark:border-slate-700 pb-1">
+    <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100 border-b-2 border-namu-600 dark:border-namu-500 pb-1">
       Administration
     </h1>
     <p class="text-sm text-slate-500 mt-1">Moderation queue, abuse filters, blocks, takedowns, and oversight ledger.</p>
 
     <!-- Access / Error States -->
     <div v-if="!canAdmin" class="py-10 text-center">
-      <h2 class="font-wiki text-xl text-slate-900 dark:text-slate-100">Restricted area</h2>
+      <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100">Restricted area</h2>
       <p class="text-sm text-slate-500 mt-1">Sign in with a SYSOP, OVERSIGHT, BUREAUCRAT, or SYSTEM_ADMIN account to manage moderation.</p>
       <p class="text-xs text-slate-400 font-mono mt-1">Current role: {{ authStore.userRole }}</p>
     </div>
@@ -19,7 +19,7 @@
 
     <div v-else-if="loadError" class="py-10 text-center space-y-3">
       <p class="text-sm text-slate-500">{{ loadError }}</p>
-      <button @click="loadAll" class="px-4 py-1 bg-wiki-link hover:bg-sky-700 text-white text-sm">Retry</button>
+      <button @click="loadAll" class="px-4 py-1 bg-namu-600 hover:bg-namu-700 text-white text-sm">Retry</button>
     </div>
 
     <div v-else class="mt-4">
@@ -64,8 +64,8 @@
       <!-- Blocks Tab -->
       <section v-if="activeTab === 'blocks'" class="mt-3 space-y-3 text-sm">
         <form @submit.prevent="addBlock" class="flex flex-wrap gap-2 border border-wiki-border dark:border-slate-700 bg-wiki-pagebg dark:bg-slate-800/40 p-3">
-          <input v-model="blockForm.target" required placeholder="Username or IP to block" class="flex-1 min-w-[10rem] px-2 py-1 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 focus:outline-none focus:border-wiki-link" />
-          <input v-model="blockForm.reason" required placeholder="Reason (public log)" class="flex-[2] min-w-[12rem] px-2 py-1 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 focus:outline-none focus:border-wiki-link" />
+          <input v-model="blockForm.target" required placeholder="Username or IP to block" class="flex-1 min-w-[10rem] px-2 py-1 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 focus:outline-none focus:border-namu-600" />
+          <input v-model="blockForm.reason" required placeholder="Reason (public log)" class="flex-[2] min-w-[12rem] px-2 py-1 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 focus:outline-none focus:border-namu-600" />
           <button type="submit" :disabled="acting" class="px-4 py-1 bg-red-700 hover:bg-red-600 text-white disabled:opacity-50">Block</button>
         </form>
         <p v-if="blocks.length === 0" class="text-slate-500">No active blocks.</p>
@@ -82,15 +82,15 @@
       <!-- Filters Tab -->
       <section v-if="activeTab === 'filters'" class="mt-3 space-y-3 text-sm">
         <form @submit.prevent="addFilter" class="flex flex-wrap gap-2 border border-wiki-border dark:border-slate-700 bg-wiki-pagebg dark:bg-slate-800/40 p-3">
-          <input v-model="filterForm.name" required placeholder="Filter name" class="flex-1 min-w-[8rem] px-2 py-1 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 focus:outline-none focus:border-wiki-link" />
-          <input v-model="filterForm.pattern" required placeholder="Regex, e.g. spam-site\.com" class="flex-[2] min-w-[10rem] px-2 py-1 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 font-mono focus:outline-none focus:border-wiki-link" />
+          <input v-model="filterForm.name" required placeholder="Filter name" class="flex-1 min-w-[8rem] px-2 py-1 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 focus:outline-none focus:border-namu-600" />
+          <input v-model="filterForm.pattern" required placeholder="Regex, e.g. spam-site\.com" class="flex-[2] min-w-[10rem] px-2 py-1 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 font-mono focus:outline-none focus:border-namu-600" />
           <select v-model="filterForm.action" class="px-2 py-1 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950">
             <option>TAG</option>
             <option>WARN</option>
             <option>DISALLOW</option>
             <option>BLOCK</option>
           </select>
-          <button type="submit" :disabled="acting" class="px-4 py-1 bg-wiki-link hover:bg-sky-700 text-white disabled:opacity-50">Add filter</button>
+          <button type="submit" :disabled="acting" class="px-4 py-1 bg-namu-600 hover:bg-namu-700 text-white disabled:opacity-50">Add filter</button>
         </form>
         <p v-if="filters.length === 0" class="text-slate-500">No abuse filters configured.</p>
         <ul v-else class="divide-y divide-slate-200 dark:divide-slate-800">
@@ -128,9 +128,9 @@
       <!-- Oversight Tab -->
       <section v-if="activeTab === 'oversight'" class="mt-3 space-y-3 text-sm">
         <form @submit.prevent="addOversight" class="flex flex-wrap gap-2 border border-wiki-border dark:border-slate-700 bg-wiki-pagebg dark:bg-slate-800/40 p-3">
-          <input v-model="oversightForm.action" required placeholder="Action, e.g. suppress" class="flex-1 min-w-[8rem] px-2 py-1 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 focus:outline-none focus:border-wiki-link" />
-          <input v-model="oversightForm.target" required placeholder="Target, e.g. revision id" class="flex-1 min-w-[8rem] px-2 py-1 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 focus:outline-none focus:border-wiki-link" />
-          <input v-model="oversightForm.details" placeholder="Details (private log)" class="flex-[2] min-w-[10rem] px-2 py-1 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 focus:outline-none focus:border-wiki-link" />
+          <input v-model="oversightForm.action" required placeholder="Action, e.g. suppress" class="flex-1 min-w-[8rem] px-2 py-1 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 focus:outline-none focus:border-namu-600" />
+          <input v-model="oversightForm.target" required placeholder="Target, e.g. revision id" class="flex-1 min-w-[8rem] px-2 py-1 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 focus:outline-none focus:border-namu-600" />
+          <input v-model="oversightForm.details" placeholder="Details (private log)" class="flex-[2] min-w-[10rem] px-2 py-1 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 focus:outline-none focus:border-namu-600" />
           <button type="submit" :disabled="acting" class="px-4 py-1 bg-slate-700 hover:bg-slate-600 text-white disabled:opacity-50">Log entry</button>
         </form>
         <p v-if="oversight.length === 0" class="text-slate-500">Oversight ledger is empty.</p>

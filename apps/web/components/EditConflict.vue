@@ -29,7 +29,7 @@
       </button>
       <button
         @click="useCombined"
-        class="px-3 py-1 bg-wiki-link hover:bg-sky-700 text-white"
+        class="px-3 py-1 bg-namu-600 hover:bg-namu-700 text-white"
       >
         Merge both
       </button>
@@ -72,7 +72,7 @@
       </div>
       <textarea
         v-model="mergedText"
-        class="w-full h-56 p-3 font-mono text-[13px] border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-wiki-link"
+        class="w-full h-56 p-3 font-mono text-[13px] border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-namu-600"
       ></textarea>
     </div>
 
@@ -86,7 +86,7 @@
       </button>
       <button
         @click="handleResolve"
-        class="px-5 py-1.5 bg-wiki-link hover:bg-sky-700 text-white font-semibold"
+        class="px-5 py-1.5 bg-namu-600 hover:bg-namu-700 text-white font-semibold"
       >
         Save merged revision
       </button>

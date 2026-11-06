@@ -2,13 +2,13 @@
 <template>
   <div class="max-w-md mx-auto py-10 text-center">
     <div v-if="status === 'loading'">
-      <h1 class="font-wiki text-2xl text-slate-900 dark:text-slate-100">Signing you in…</h1>
+      <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Signing you in…</h1>
       <p class="text-sm text-slate-500 mt-2" role="status">
         Completing sign-in<template v-if="provider"> with {{ providerLabel }}</template>…
       </p>
     </div>
     <div v-else>
-      <h1 class="font-wiki text-2xl text-slate-900 dark:text-slate-100">Sign-in failed</h1>
+      <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Sign-in failed</h1>
       <p class="text-sm text-red-700 dark:text-red-300 mt-2">{{ errorMsg }}</p>
       <p class="mt-4">
         <NuxtLink to="/" class="text-sm text-wiki-link dark:text-sky-400 hover:underline">

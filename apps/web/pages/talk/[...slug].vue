@@ -3,7 +3,7 @@
   <div>
     <WikiTabs :slug="slug" active="talk" />
 
-    <h1 class="font-wiki text-3xl text-slate-900 dark:text-slate-100 border-b border-wiki-border dark:border-slate-700 pb-1">
+    <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100 border-b-2 border-namu-600 dark:border-namu-500 pb-1">
       Talk: {{ displayTitle }}
     </h1>
     <p class="text-sm text-slate-500 mt-1">Discussion, RFC proposals, and editorial consensus for this article.</p>
@@ -28,13 +28,13 @@
 
     <!-- Empty Discussion State -->
     <div v-else-if="threads.length === 0" class="py-10 text-center">
-      <h2 class="font-wiki text-xl text-slate-900 dark:text-slate-100">No discussion topics yet</h2>
+      <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100">No discussion topics yet</h2>
       <p class="text-sm text-slate-500 mt-1">
         Be the first to open a discussion or propose an RFC regarding “{{ displayTitle }}”.
       </p>
       <button
         @click="showNewThreadModal = true"
-        class="mt-4 px-4 py-1.5 text-sm bg-wiki-link hover:bg-sky-700 text-white"
+        class="mt-4 px-4 py-1.5 text-sm bg-namu-600 hover:bg-namu-700 text-white"
       >
         Start the first topic
       </button>
@@ -48,7 +48,7 @@
         class="border-t border-wiki-border dark:border-slate-700 py-3"
       >
         <div class="flex flex-wrap items-baseline justify-between gap-2 cursor-pointer" @click="toggleThread(thread.id)">
-          <h2 class="font-wiki text-xl text-slate-900 dark:text-slate-100">
+          <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100">
             <span class="text-slate-400 text-base mr-1">{{ expandedThreads[thread.id] ? '▾' : '▸' }}</span>
             {{ thread.title }}
           </h2>
@@ -115,14 +115,14 @@
               v-model="replyText[thread.id]"
               rows="2"
               placeholder="Write a constructive response or counterpoint..."
-              class="w-full p-2 text-sm border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-wiki-link resize-y"
+              class="w-full p-2 text-sm border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-namu-600 resize-y"
               required
             ></textarea>
             <div class="flex justify-end">
               <button
                 type="submit"
                 :disabled="submittingReply[thread.id]"
-                class="px-4 py-1 bg-wiki-link hover:bg-sky-700 text-white text-sm disabled:opacity-50"
+                class="px-4 py-1 bg-namu-600 hover:bg-namu-700 text-white text-sm disabled:opacity-50"
               >
                 {{ submittingReply[thread.id] ? 'Posting…' : 'Post reply' }}
               </button>
@@ -139,7 +139,7 @@
     >
       <div class="bg-white dark:bg-slate-900 border border-wiki-border dark:border-slate-700 max-w-lg w-full p-5 shadow-xl">
         <div class="flex items-center justify-between border-b border-wiki-border dark:border-slate-700 pb-2">
-          <h2 class="font-wiki text-xl text-slate-900 dark:text-slate-100">New discussion topic</h2>
+          <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100">New discussion topic</h2>
           <button @click="showNewThreadModal = false" class="text-slate-400 hover:text-slate-600 px-1">✕</button>
         </div>
 
@@ -150,7 +150,7 @@
               v-model="newThreadTitle"
               type="text"
               placeholder="e.g. Propose restructuring the Asymptotic Complexity section"
-              class="w-full px-2.5 py-1.5 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-wiki-link"
+              class="w-full px-2.5 py-1.5 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-namu-600"
               required
             />
           </div>
@@ -161,7 +161,7 @@
               v-model="newThreadContent"
               rows="4"
               placeholder="Describe your suggestion, rationale, or query..."
-              class="w-full p-2.5 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-wiki-link"
+              class="w-full p-2.5 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-namu-600"
               required
             ></textarea>
           </div>
@@ -207,7 +207,7 @@
             <button
               type="submit"
               :disabled="submittingNewThread"
-              class="px-5 py-1.5 bg-wiki-link hover:bg-sky-700 text-white disabled:opacity-50"
+              class="px-5 py-1.5 bg-namu-600 hover:bg-namu-700 text-white disabled:opacity-50"
             >
               {{ submittingNewThread ? 'Publishing…' : 'Publish topic' }}
             </button>

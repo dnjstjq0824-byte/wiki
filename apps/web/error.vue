@@ -13,7 +13,7 @@
     <main class="flex-1 max-w-[72rem] w-full mx-auto px-5 py-6">
       <div class="bg-white dark:bg-slate-900 border border-wiki-border dark:border-slate-800 px-6 py-8 max-w-xl">
         <p class="font-mono text-sm text-slate-400">{{ error?.statusCode || 500 }}</p>
-        <h1 class="font-wiki text-3xl mt-1">
+        <h1 class="text-3xl font-bold mt-1">
           {{ error?.statusCode === 404 ? 'Page not found' : 'Something went wrong' }}
         </h1>
         <p class="text-sm text-slate-600 dark:text-slate-400 mt-3 leading-relaxed">

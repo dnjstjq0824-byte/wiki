@@ -24,10 +24,19 @@ export default {
           link: '#0645AD',
           visited: '#0B0080',
           redlink: '#BA0000',
-          pagebg: '#F8F9FA',
+          pagebg: '#E9ECEF',
           border: '#C8CCD1',
           notice: '#FEF6E7',
           darkbg: '#0B192C'
+        },
+        namu: {
+          900: '#00473F',
+          800: '#00564C',
+          700: '#00685C',
+          600: '#008275',
+          500: '#00A08A',
+          100: '#D7F0EB',
+          50: '#EFF8F6'
         }
       },
       fontFamily: {

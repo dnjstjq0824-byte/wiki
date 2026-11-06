@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1 class="font-wiki text-3xl text-slate-900 dark:text-slate-100 border-b border-wiki-border dark:border-slate-700 pb-1 text-center">
+    <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100 border-b-2 border-namu-600 dark:border-namu-500 pb-1 text-center">
       Welcome to Treewiki
     </h1>
     <p class="text-center text-sm text-slate-600 dark:text-slate-400 mt-2">
@@ -16,7 +16,7 @@
           Featured article
         </h2>
         <div class="p-4">
-          <p class="font-wiki text-xl">
+          <p class="text-xl font-bold">
             <NuxtLink to="/w/Computer_Science" class="text-wiki-link dark:text-sky-400 hover:underline">
               Computer Science
             </NuxtLink>

@@ -13,7 +13,7 @@
     />
 
     <div v-else>
-      <h1 class="font-wiki text-3xl text-slate-900 dark:text-slate-100 border-b border-wiki-border dark:border-slate-700 pb-1">
+      <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100 border-b-2 border-namu-600 dark:border-namu-500 pb-1">
         Editing: {{ displayTitle }}
       </h1>
       <p class="text-sm text-slate-500 mt-1">
@@ -40,7 +40,7 @@
             v-model="summary"
             type="text"
             placeholder="e.g., Added definition, fixed typo, expanded citations, updated topic link"
-            class="w-full px-2.5 py-1.5 text-sm border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-wiki-link"
+            class="w-full px-2.5 py-1.5 text-sm border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-namu-600"
           />
         </div>
 
@@ -56,7 +56,7 @@
             <button
               @click="handleSave"
               :disabled="saving"
-              class="px-6 py-1.5 bg-wiki-link hover:bg-sky-700 text-white font-semibold disabled:opacity-50"
+              class="px-6 py-1.5 bg-namu-600 hover:bg-namu-700 text-white font-semibold disabled:opacity-50"
             >
               {{ saving ? 'Publishing…' : 'Publish Revision' }}
             </button>

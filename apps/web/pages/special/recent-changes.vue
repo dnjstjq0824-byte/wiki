@@ -1,7 +1,7 @@
 <!-- apps/web/pages/special/recent-changes.vue -->
 <template>
   <div>
-    <h1 class="font-wiki text-3xl text-slate-900 dark:text-slate-100 border-b border-wiki-border dark:border-slate-700 pb-1">
+    <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100 border-b-2 border-namu-600 dark:border-namu-500 pb-1">
       Recent Changes
     </h1>
     <p class="text-sm text-slate-500 mt-1">Edits, new pages, and editorial activity across Treewiki.</p>
@@ -13,7 +13,7 @@
           v-model="searchFilter"
           type="text"
           placeholder="Filter by title or author…"
-          class="flex-1 px-2 py-1 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-wiki-link"
+          class="flex-1 px-2 py-1 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-namu-600"
         />
       </label>
       <label class="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 cursor-pointer">
@@ -34,7 +34,7 @@
     </div>
 
     <div v-else-if="filteredChanges.length === 0" class="py-12 text-center">
-      <p class="font-wiki text-xl text-slate-800 dark:text-slate-200">No changes match your filter</p>
+      <p class="text-xl font-bold text-slate-800 dark:text-slate-200">No changes match your filter</p>
       <p class="text-sm text-slate-500 mt-1">New edits will appear here as they happen.</p>
     </div>
 

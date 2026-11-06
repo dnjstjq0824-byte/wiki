@@ -41,7 +41,7 @@
               type="text"
               required
               autocomplete="username"
-              class="w-full px-2.5 py-1.5 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-wiki-link"
+              class="w-full px-2.5 py-1.5 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-namu-600"
             />
           </div>
           <div>
@@ -51,13 +51,13 @@
               type="password"
               required
               autocomplete="current-password"
-              class="w-full px-2.5 py-1.5 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-wiki-link"
+              class="w-full px-2.5 py-1.5 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-namu-600"
             />
           </div>
           <button
             type="submit"
             :disabled="loading"
-            class="w-full py-2 bg-wiki-link hover:bg-sky-700 text-white font-semibold disabled:opacity-50"
+            class="w-full py-2 bg-namu-600 hover:bg-namu-700 text-white font-semibold disabled:opacity-50"
           >
             {{ loading ? 'Logging in…' : 'Log in' }}
           </button>
@@ -73,7 +73,7 @@
               required
               autocomplete="username"
               placeholder="3-32 alphanumeric characters"
-              class="w-full px-2.5 py-1.5 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-wiki-link"
+              class="w-full px-2.5 py-1.5 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-namu-600"
             />
           </div>
           <div>
@@ -84,7 +84,7 @@
               required
               autocomplete="email"
               placeholder="curator@example.com"
-              class="w-full px-2.5 py-1.5 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-wiki-link"
+              class="w-full px-2.5 py-1.5 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-namu-600"
             />
           </div>
           <div>
@@ -95,7 +95,7 @@
               required
               autocomplete="new-password"
               placeholder="Min 8 chars, uppercase, lowercase, number"
-              class="w-full px-2.5 py-1.5 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-wiki-link"
+              class="w-full px-2.5 py-1.5 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-namu-600"
             />
           </div>
           <label class="flex items-start gap-2 cursor-pointer text-[13px] text-slate-600 dark:text-slate-400">
@@ -111,7 +111,7 @@
           <button
             type="submit"
             :disabled="loading"
-            class="w-full py-2 bg-wiki-link hover:bg-sky-700 text-white font-semibold disabled:opacity-50"
+            class="w-full py-2 bg-namu-600 hover:bg-namu-700 text-white font-semibold disabled:opacity-50"
           >
             {{ loading ? 'Creating account…' : 'Create account' }}
           </button>

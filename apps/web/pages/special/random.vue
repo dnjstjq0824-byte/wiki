@@ -1,7 +1,7 @@
 <!-- apps/web/pages/special/random.vue -->
 <template>
   <div class="max-w-2xl mx-auto text-center">
-    <h1 class="font-wiki text-3xl text-slate-900 dark:text-slate-100 border-b border-wiki-border dark:border-slate-700 pb-1">
+    <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100 border-b-2 border-namu-600 dark:border-namu-500 pb-1">
       Random Article
     </h1>
 
@@ -13,7 +13,7 @@
       <p class="text-sm text-slate-500">{{ loadError }}</p>
       <button
         @click="rollRandom"
-        class="px-5 py-1.5 text-sm bg-wiki-link hover:bg-sky-700 text-white"
+        class="px-5 py-1.5 text-sm bg-namu-600 hover:bg-namu-700 text-white"
       >
         Try again
       </button>
@@ -21,7 +21,7 @@
 
     <div v-else-if="page" class="py-8 space-y-3">
       <p class="text-xs text-slate-500 uppercase tracking-wide">Your random destination</p>
-      <p class="font-wiki text-2xl">
+      <p class="text-2xl font-bold">
         <NuxtLink :to="`/w/${page.title}`" class="text-wiki-link dark:text-sky-400 hover:underline">
           {{ page.title.replace(/_/g, ' ') }}
         </NuxtLink>
@@ -32,7 +32,7 @@
       <div class="flex items-center justify-center gap-2 pt-2 text-sm">
         <NuxtLink
           :to="`/w/${page.title}`"
-          class="px-5 py-1.5 bg-wiki-link hover:bg-sky-700 text-white"
+          class="px-5 py-1.5 bg-namu-600 hover:bg-namu-700 text-white"
         >
           Read Article
         </NuxtLink>

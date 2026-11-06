@@ -3,7 +3,7 @@
   <div>
     <WikiTabs :slug="slug" active="history" />
 
-    <h1 class="font-wiki text-3xl text-slate-900 dark:text-slate-100 border-b border-wiki-border dark:border-slate-700 pb-1">
+    <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100 border-b-2 border-namu-600 dark:border-namu-500 pb-1">
       Revision History of “{{ displayTitle }}”
     </h1>
     <p class="text-sm text-slate-500 mt-1">Immutable revision ledger · select two revisions to compare</p>
@@ -26,7 +26,7 @@
       <button
         @click="toggleCompare"
         :disabled="comparing || revisions.length < 2"
-        class="px-4 py-1 bg-wiki-link hover:bg-sky-700 text-white disabled:opacity-50"
+        class="px-4 py-1 bg-namu-600 hover:bg-namu-700 text-white disabled:opacity-50"
       >
         {{ showInlineDiff ? 'Hide changes' : 'Compare selected revisions' }}
       </button>

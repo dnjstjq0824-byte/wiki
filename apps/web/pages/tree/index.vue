@@ -1,7 +1,7 @@
 <!-- apps/web/pages/tree/index.vue -->
 <template>
   <div>
-    <h1 class="font-wiki text-3xl text-slate-900 dark:text-slate-100 border-b border-wiki-border dark:border-slate-700 pb-1">
+    <h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100 border-b-2 border-namu-600 dark:border-namu-500 pb-1">
       Topic Tree Knowledge Taxonomy
     </h1>
     <p class="text-sm text-slate-500 mt-1">Prerequisite relationships and hierarchies across the knowledge graph (DAG).</p>
@@ -51,7 +51,7 @@
       </div>
       <div v-else-if="loadError" class="py-10 text-center text-sm text-slate-500 space-y-3">
         <p>{{ loadError }}</p>
-        <button @click="loadTopicData" class="px-4 py-1 bg-wiki-link hover:bg-sky-700 text-white">Retry</button>
+        <button @click="loadTopicData" class="px-4 py-1 bg-namu-600 hover:bg-namu-700 text-white">Retry</button>
       </div>
       <D3TreeViewer v-else :root="hierarchyRoot" />
     </div>
@@ -65,7 +65,7 @@
 
         <div v-else-if="loadError" class="py-10 text-center text-sm text-slate-500 space-y-3">
           <p>{{ loadError }}</p>
-          <button @click="loadTopicData" class="px-4 py-1 bg-wiki-link hover:bg-sky-700 text-white">Retry</button>
+          <button @click="loadTopicData" class="px-4 py-1 bg-namu-600 hover:bg-namu-700 text-white">Retry</button>
         </div>
 
         <div v-else-if="displayNodes.length === 0" class="py-10 text-center text-sm text-slate-500">
@@ -105,7 +105,7 @@
           Topic details
         </h2>
         <div v-if="selectedNode" class="p-3 text-sm space-y-2">
-          <p class="font-wiki text-lg">{{ selectedNode.title }}</p>
+          <p class="text-lg font-bold">{{ selectedNode.title }}</p>
           <p class="text-slate-600 dark:text-slate-400 text-[13px]">{{ selectedNode.description }}</p>
           <ul class="space-y-1">
             <li v-for="art in selectedNode.articles" :key="art">
@@ -117,7 +117,7 @@
           <p>
             <NuxtLink
               :to="`/w/${encodeURIComponent(selectedNode.title.replace(/ /g, '_'))}`"
-              class="inline-block px-4 py-1 bg-wiki-link hover:bg-sky-700 text-white text-[13px]"
+              class="inline-block px-4 py-1 bg-namu-600 hover:bg-namu-700 text-white text-[13px]"
             >
               Read article
             </NuxtLink>

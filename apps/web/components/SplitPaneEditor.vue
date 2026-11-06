@@ -168,7 +168,7 @@ const renderedHtml = computed(() => {
 
   // Headings
   html = html.replace(/^=== (.*?) ===$/gm, '<h3 class="text-base font-bold mt-4 mb-2">$1</h3>')
-  html = html.replace(/^== (.*?) ==$/gm, '<h2 class="font-wiki text-xl mt-5 mb-3 pb-1 border-b border-wiki-border dark:border-slate-700">$1</h2>')
+  html = html.replace(/^== (.*?) ==$/gm, '<h2 class="text-xl font-bold mt-5 mb-3 pb-1 border-b-2 border-namu-600 dark:border-namu-500">$1</h2>')
 
   // Bold & Italic
   html = html.replace(/'''(.*?)'''/g, '<strong class="font-bold">$1</strong>')
