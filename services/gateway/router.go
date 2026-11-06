@@ -6,9 +6,12 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
+	"github.com/dnjstjqppk-dev/treewiki/pkg/auth"
 	"github.com/dnjstjqppk-dev/treewiki/pkg/db"
+	"github.com/dnjstjqppk-dev/treewiki/pkg/middleware"
 	"github.com/dnjstjqppk-dev/treewiki/pkg/parser"
 	"github.com/dnjstjqppk-dev/treewiki/services/governance"
 	"github.com/dnjstjqppk-dev/treewiki/services/identity"
@@ -38,12 +41,28 @@ func NewRouter() http.Handler {
 
 	dbStatus := "IN_MEMORY"
 	var userStore identity.UserStore = identity.NewMemoryUserStore()
+	var wikiStore wiki.PageStorage = wiki.NewPageStore()
+	var topicStore topictree.TopicStorage = topictree.NewTopicStore()
+	var talkStore talk.TalkStorage = talk.NewTalkStore()
+	var searchBackend search.SearchBackend = search.NewSearchIndex()
+	var mediaStore search.MediaStorage = search.NewMediaStore()
+	var govStore governance.GovernanceStorage = governance.NewGovernanceStore()
+	var wlStore watchlist.WatchlistStorage = watchlist.NewWatchlistStore()
 
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL != "" {
 		if pgDB, err := db.Connect(dbURL); err == nil {
-			_ = pgDB.Migrate("database/migrations/001_initial_schema.sql")
+			if err := pgDB.MigrateAll("database/migrations"); err != nil {
+				log.Printf("[Warning] migration failed: %v\n", err)
+			}
 			userStore = identity.NewPostgresUserStore(pgDB.Pool)
+			wikiStore = wiki.NewPostgresPageStore(pgDB.Pool)
+			topicStore = topictree.NewPostgresTopicStore(pgDB.Pool)
+			talkStore = talk.NewPostgresTalkStore(pgDB.Pool)
+			searchBackend = search.NewPostgresSearchBackend(pgDB.Pool)
+			mediaStore = search.NewPostgresMediaStore(pgDB.Pool)
+			govStore = governance.NewPostgresGovernanceStore(pgDB.Pool)
+			wlStore = watchlist.NewPostgresWatchlistStore(pgDB.Pool)
 			dbStatus = "POSTGRESQL_CONNECTED"
 		} else {
 			log.Printf("[Warning] PostgreSQL connection failed, falling back to In-Memory: %v\n", err)
@@ -56,7 +75,7 @@ func NewRouter() http.Handler {
 		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(HealthResponse{
 			Status:    "OK",
-			Version:   "1.0.0",
+			Version:   appVersion(),
 			Timestamp: time.Now().UTC(),
 			Database:  dbStatus,
 		})
@@ -68,6 +87,9 @@ func NewRouter() http.Handler {
 		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(map[string]string{"status": "READY", "database": dbStatus})
 	})
+
+	// Prometheus metrics
+	mux.HandleFunc("GET /metrics", middleware.MetricsHandler())
 
 	// Wikitext parser API
 	mux.HandleFunc("POST /api/v1/parser/preview", func(w http.ResponseWriter, r *http.Request) {
@@ -87,9 +109,17 @@ func NewRouter() http.Handler {
 	if jwtSecret == "" {
 		jwtSecret = "treewiki_dev_secret_change_me"
 	}
+	if isProduction() && (jwtSecret == "" || jwtSecret == "treewiki_dev_secret_change_me") {
+		log.Fatal("[Treewiki Gateway] JWT_SECRET must be set to a strong value in production")
+	}
 	svc := identity.NewIdentityService(userStore, jwtSecret)
+	svc.ConfigureOAuthFromEnv()
 	h := identity.NewHandler(svc)
 
+	mux.HandleFunc("GET /api/v1/auth/oauth/providers", h.OAuthProviders)
+	mux.HandleFunc("GET /api/v1/auth/oauth/{provider}/login", h.OAuthLogin)
+	mux.HandleFunc("GET /api/v1/auth/oauth/{provider}/callback", h.OAuthCallback)
+	mux.HandleFunc("POST /api/v1/auth/oauth/consume", h.OAuthConsume)
 	mux.HandleFunc("POST /api/v1/auth/register", h.Register)
 	mux.HandleFunc("POST /api/v1/auth/login", h.Login)
 	mux.HandleFunc("POST /api/v1/auth/refresh", h.Refresh)
@@ -104,39 +134,27 @@ func NewRouter() http.Handler {
 	mux.HandleFunc("POST /api/v1/auth/anonymize", identity.RequireAuth(h.AnonymizeAccount))
 	mux.HandleFunc("GET /api/v1/users/{username}", h.GetPublicProfile)
 
-	// Wiki service wiring
-	wikiStore := wiki.NewPageStore()
+	// Service wiring (memory or PostgreSQL stores, selected above)
 	wikiSvc := wiki.NewWikiService(wikiStore)
 	wikiH := wiki.NewHandler(wikiSvc)
 
-	// Topic tree service wiring
-	topicStore := topictree.NewTopicStore()
 	topicSvc := topictree.NewTopicService(topicStore)
 	topicH := topictree.NewHandler(topicSvc)
 
-	// Talk service wiring
-	talkStore := talk.NewTalkStore()
 	talkSvc := talk.NewTalkService(talkStore)
 	talkH := talk.NewHandler(talkSvc)
 
-	// Search service wiring
-	searchIndex := search.NewSearchIndex()
-	mediaStore := search.NewMediaStore()
-	searchH := search.NewHandler(searchIndex, mediaStore)
+	searchH := search.NewHandler(searchBackend, mediaStore)
 
-	// Governance service wiring
-	govStore := governance.NewGovernanceStore()
 	govSvc := governance.NewGovernanceService(govStore)
 	govH := governance.NewHandler(govSvc)
 
-	// Watchlist service wiring
-	wlStore := watchlist.NewWatchlistStore()
 	wlSvc := watchlist.NewService(wlStore)
 	wlH := watchlist.NewHandler(wlSvc)
 
 	// Link wiki updates to search index and governance activity log
 	wikiH.SetOnPageSave(func(p *wiki.Page, isUpdate bool) {
-		searchIndex.Index(&search.SearchDocument{
+		searchBackend.Index(&search.SearchDocument{
 			ID:        p.ID,
 			Namespace: int(p.Namespace),
 			Title:     p.Title,
@@ -155,7 +173,7 @@ func NewRouter() http.Handler {
 	})
 
 	// Seed foundational default data
-	seedDefaultData(wikiSvc, topicSvc, searchIndex, talkSvc, govSvc)
+	seedDefaultData(wikiSvc, topicSvc, searchBackend, talkSvc, govSvc)
 
 	mux.HandleFunc("GET /api/v1/namespaces", wikiH.Namespaces)
 	mux.HandleFunc("GET /api/v1/namespaces/{namespace}/pages", wikiH.ListPages)
@@ -172,6 +190,7 @@ func NewRouter() http.Handler {
 	mux.HandleFunc("POST /api/v1/pages/{namespace}/{slug}/rollback", identity.RequireAuth(wikiH.Rollback))
 	mux.HandleFunc("GET /api/v1/categories/{category}", wikiH.CategoryMembers)
 	mux.HandleFunc("GET /api/v1/pages/{namespace}/{slug}/diff", wikiH.Diff)
+	mux.HandleFunc("GET /api/v1/pages/random", wikiH.RandomPage)
 
 	mux.HandleFunc("GET /api/v1/topics", topicH.ListNodes)
 	mux.HandleFunc("POST /api/v1/topics", identity.RequireAuth(topicH.CreateNode))
@@ -189,16 +208,17 @@ func NewRouter() http.Handler {
 
 	mux.HandleFunc("GET /api/v1/talk/threads", talkH.ListThreads)
 	mux.HandleFunc("POST /api/v1/talk/threads", talkH.CreateThread)
-	mux.HandleFunc("PUT /api/v1/talk/threads/{id}/status", identity.RequireAuth(talkH.SetStatus))
-	mux.HandleFunc("PUT /api/v1/talk/threads/{id}/pin", identity.RequireAuth(talkH.PinThread))
-	mux.HandleFunc("PUT /api/v1/talk/threads/{id}/lock", identity.RequireAuth(talkH.LockThread))
+	mux.HandleFunc("PUT /api/v1/talk/threads/{id}/status", identity.RequireRole(auth.RoleSysop, talkH.SetStatus))
+	mux.HandleFunc("PUT /api/v1/talk/threads/{id}/pin", identity.RequireRole(auth.RoleSysop, talkH.PinThread))
+	mux.HandleFunc("PUT /api/v1/talk/threads/{id}/lock", identity.RequireRole(auth.RoleSysop, talkH.LockThread))
 	mux.HandleFunc("GET /api/v1/talk/threads/{id}/comments", talkH.GetComments)
 	mux.HandleFunc("POST /api/v1/talk/threads/{id}/comments", talkH.AddComment)
 	mux.HandleFunc("POST /api/v1/talk/rfc", identity.RequireAuth(talkH.CreateRFC))
 	mux.HandleFunc("GET /api/v1/talk/rfc/{id}", talkH.GetRFC)
+	mux.HandleFunc("GET /api/v1/talk/threads/{id}/rfc", talkH.GetRFCByThread)
 	mux.HandleFunc("POST /api/v1/talk/rfc/{id}/vote", talkH.VoteRFC)
-	mux.HandleFunc("POST /api/v1/talk/rfc/{id}/close", identity.RequireAuth(talkH.CloseRFC))
-	mux.HandleFunc("POST /api/v1/talk/threads/{id}/archive", identity.RequireAuth(talkH.ArchiveThread))
+	mux.HandleFunc("POST /api/v1/talk/rfc/{id}/close", identity.RequireRole(auth.RoleSysop, talkH.CloseRFC))
+	mux.HandleFunc("POST /api/v1/talk/threads/{id}/archive", identity.RequireRole(auth.RoleSysop, talkH.ArchiveThread))
 	mux.HandleFunc("GET /api/v1/talk/archived", talkH.ListArchived)
 	mux.HandleFunc("POST /api/v1/talk/arbitration", identity.RequireAuth(talkH.CreateArbitration))
 	mux.HandleFunc("GET /api/v1/talk/arbitration", talkH.ListArbitrations)
@@ -210,45 +230,70 @@ func NewRouter() http.Handler {
 	mux.HandleFunc("POST /api/v1/media", identity.RequireAuth(searchH.UploadMedia))
 
 	mux.HandleFunc("GET /api/v1/governance/filters", govH.ListFilters)
-	mux.HandleFunc("POST /api/v1/governance/filters", identity.RequireAuth(govH.AddFilter))
+	mux.HandleFunc("POST /api/v1/governance/filters", identity.RequireRole(auth.RoleSysop, govH.AddFilter))
 	mux.HandleFunc("POST /api/v1/governance/evaluate", govH.Evaluate)
 	mux.HandleFunc("GET /api/v1/governance/blocks", govH.ListBlocks)
-	mux.HandleFunc("POST /api/v1/governance/blocks", identity.RequireAuth(govH.AddBlock))
+	mux.HandleFunc("POST /api/v1/governance/blocks", identity.RequireRole(auth.RoleSysop, govH.AddBlock))
 	mux.HandleFunc("GET /api/v1/governance/oversight", govH.ListOversight)
-	mux.HandleFunc("POST /api/v1/governance/oversight", identity.RequireAuth(govH.AddOversight))
+	mux.HandleFunc("POST /api/v1/governance/oversight", identity.RequireRole(auth.RoleOversight, govH.AddOversight))
 	mux.HandleFunc("GET /api/v1/governance/takedowns", govH.ListTakedowns)
 	mux.HandleFunc("POST /api/v1/governance/takedowns", identity.RequireAuth(govH.AddTakedown))
-	mux.HandleFunc("PUT /api/v1/governance/takedowns/{id}", identity.RequireAuth(govH.UpdateTakedownStatus))
-	mux.HandleFunc("GET /api/v1/governance/dump", identity.RequireAuth(govH.Dump))
+	mux.HandleFunc("PUT /api/v1/governance/takedowns/{id}", identity.RequireRole(auth.RoleSysop, govH.UpdateTakedownStatus))
+	mux.HandleFunc("GET /api/v1/governance/dump", identity.RequireRole(auth.RoleSysop, govH.Dump))
 	mux.HandleFunc("GET /api/v1/recentchanges", govH.RecentChanges)
 
 	mux.HandleFunc("GET /api/v1/watchlist", wlH.List)
 	mux.HandleFunc("POST /api/v1/watchlist", identity.RequireAuth(wlH.Add))
 	mux.HandleFunc("DELETE /api/v1/watchlist", identity.RequireAuth(wlH.Remove))
 
+	// Platform statistics for portals and dashboards
+	mux.HandleFunc("GET /api/v1/stats", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"version":   appVersion(),
+			"database":  dbStatus,
+			"pages":     wikiSvc.CountAll(),
+			"topics":    len(topicSvc.AllNodes()),
+			"timestamp": time.Now().UTC(),
+		})
+	})
+
 	authed := identity.AuthMiddleware(jwtSecret)(mux)
-	return corsMiddleware(authed)
+	limiter := middleware.NewRateLimiterFromEnv()
+	return middleware.Chain(
+		authed,
+		middleware.RequestID,
+		middleware.Recovery,
+		middleware.Logger,
+		middleware.SecurityHeaders,
+		middleware.BodyLimit(40<<20),
+		limiter.Middleware,
+		func(next http.Handler) http.Handler {
+			return middleware.CORS(middleware.CORSConfigFromEnv(), next)
+		},
+	)
 }
 
-func corsMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, If-Match")
+func isProduction() bool {
+	env := os.Getenv("ENV")
+	if env == "" {
+		env = os.Getenv("NODE_ENV")
+	}
+	return env == "production"
+}
 
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
+func appVersion() string {
+	if v := strings.TrimSpace(os.Getenv("APP_VERSION")); v != "" {
+		return v
+	}
+	return "1.0.0"
 }
 
 func seedDefaultData(
 	wikiSvc *wiki.WikiService,
 	topicSvc *topictree.TopicService,
-	searchIdx *search.SearchIndex,
+	searchIdx search.SearchBackend,
 	talkSvc *talk.TalkService,
 	govSvc *governance.GovernanceService,
 ) {
@@ -422,13 +467,16 @@ Treewiki utilizes Myers diff to compute token-level inline and side-by-side revi
 	_ = topicSvc.Link("ds", "graph")
 	_ = topicSvc.Link("algo", "diff")
 
-	// 3. Discussion Thread & RFC on Treewiki page
-	if thread, err := talkSvc.CreateThread("0:Treewiki", "RFC-1: Standardizing Wikitext and Markdown Interop", "CuratorAlpha"); err == nil {
-		_, _ = talkSvc.AddComment(thread.ID, "", "CuratorAlpha", "Welcome to Treewiki! We invite the community to review the hybrid parser specification. Do you agree with prioritising CommonMark for tabular data while keeping Wikitext for templates?")
-		_, _ = talkSvc.AddComment(thread.ID, "", "FoundingEditor", "Strong support. CommonMark tables are much easier to read and edit across mobile and desktop devices.")
-		if rfc, err := talkSvc.CreateRFC(thread.ID, "Should CommonMark syntax be standardized for tabular and code-fence data?", 3); err == nil {
-			_ = talkSvc.VoteRFC(rfc.ID, "FoundingEditor", "SUPPORT")
-			_ = talkSvc.VoteRFC(rfc.ID, "CuratorAlpha", "SUPPORT")
+	// 3. Discussion Thread & RFC on Treewiki page (seed once; the guard keeps
+	// PostgreSQL restarts from duplicating threads).
+	if len(talkSvc.ListThreads("0:Treewiki")) == 0 {
+		if thread, err := talkSvc.CreateThread("0:Treewiki", "RFC-1: Standardizing Wikitext and Markdown Interop", "CuratorAlpha"); err == nil {
+			_, _ = talkSvc.AddComment(thread.ID, "", "CuratorAlpha", "Welcome to Treewiki! We invite the community to review the hybrid parser specification. Do you agree with prioritising CommonMark for tabular data while keeping Wikitext for templates?")
+			_, _ = talkSvc.AddComment(thread.ID, "", "FoundingEditor", "Strong support. CommonMark tables are much easier to read and edit across mobile and desktop devices.")
+			if rfc, err := talkSvc.CreateRFC(thread.ID, "Should CommonMark syntax be standardized for tabular and code-fence data?", 3); err == nil {
+				_ = talkSvc.VoteRFC(rfc.ID, "FoundingEditor", "SUPPORT")
+				_ = talkSvc.VoteRFC(rfc.ID, "CuratorAlpha", "SUPPORT")
+			}
 		}
 	}
 }

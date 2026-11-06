@@ -29,4 +29,3 @@ func GenerateAnonymizedProfile() AnonymizedProfile {
 		IsBlocked:    true,
 	}
 }
-

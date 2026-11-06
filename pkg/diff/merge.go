@@ -2,9 +2,9 @@ package diff
 
 // Conflict represents a merge conflict region
 type Conflict struct {
-	Base    string `json:"base"`
-	Ours    string `json:"ours"`
-	Theirs  string `json:"theirs"`
+	Base   string `json:"base"`
+	Ours   string `json:"ours"`
+	Theirs string `json:"theirs"`
 }
 
 // Merge3 performs a simple line-based 3-way merge.

@@ -88,7 +88,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 export interface TreeNode {
   id: string
@@ -104,56 +104,14 @@ const props = withDefaults(
     root?: TreeNode
   }>(),
   {
+    // Empty fallback: real taxonomy arrives via the root prop from /topics/export.
     root: () => ({
-      id: 'root',
-      name: 'Human Knowledge Tree',
-      icon: '🌲',
-      description: 'Root taxonomy of all scientific, mathematical, and philosophical disciplines.',
+      id: 'empty',
+      name: 'No topics yet',
+      icon: '🌱',
+      description: 'Topics appear here once curators add them to the taxonomy.',
       difficulty: 1,
-      children: [
-        {
-          id: 'cs',
-          name: 'Computer Science',
-          icon: '💻',
-          description: 'Theory and practice of algorithmic computation and architectures.',
-          difficulty: 1,
-          children: [
-            {
-              id: 'algo',
-              name: 'Algorithms & Data Structures',
-              icon: '⚡',
-              description: 'Sorting, searching, graph traversal, and memory representations.',
-              difficulty: 2,
-              children: [
-                { id: 'diff', name: 'Myers Diff Algorithm', icon: '📝', description: 'O(ND) greedy sequence diffing.', difficulty: 3 },
-                { id: 'hash', name: 'Cryptographic Hash Trees', icon: '🔒', description: 'Merkle trees and SHA-256 state hashing.', difficulty: 3 },
-              ],
-            },
-            {
-              id: 'quantum',
-              name: 'Quantum Computation',
-              icon: '⚛️',
-              description: 'Superposition, entanglement, and quantum circuits.',
-              difficulty: 4,
-              children: [
-                { id: 'shor', name: 'Shor Factorization Algorithm', icon: '🔢', description: 'Polynomial time prime factorization.', difficulty: 5 },
-                { id: 'grover', name: 'Grover Search Algorithm', icon: '🔍', description: 'Quadratic speedup unstructured search.', difficulty: 4 },
-              ],
-            },
-          ],
-        },
-        {
-          id: 'math',
-          name: 'Mathematics',
-          icon: '📐',
-          description: 'Abstract deductive reasoning of structures and patterns.',
-          difficulty: 1,
-          children: [
-            { id: 'linalg', name: 'Linear Algebra', icon: '📊', description: 'Vectors, matrices, and eigenvalues.', difficulty: 2 },
-            { id: 'discrete', name: 'Discrete Mathematics', icon: '🎲', description: 'Combinatorics, graphs, and logic.', difficulty: 2 },
-          ],
-        },
-      ],
+      children: [],
     }),
   }
 )
@@ -163,7 +121,12 @@ const emit = defineEmits<{
 }>()
 
 const collapsedMap = ref<Record<string, boolean>>({})
-const selectedId = ref<string>('root')
+const selectedId = ref<string>(props.root?.id || 'empty')
+
+// Reselect the root when live taxonomy arrives asynchronously.
+watch(() => props.root?.id, (id) => {
+  if (id) selectedId.value = id
+})
 
 const isCollapsed = (id: string) => !!collapsedMap.value[id]
 

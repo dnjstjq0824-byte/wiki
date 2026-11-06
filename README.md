@@ -77,3 +77,49 @@ pnpm dev
 # Web Portal: http://localhost:3000
 ```
 
+## 4. Production Operations
+
+### 4.1 Full stack via Compose (PostgreSQL-backed)
+```bash
+cp .env.example .env   # set JWT_SECRET and CORS_ALLOWED_ORIGINS
+cd infrastructure
+docker compose up -d --build
+# Web: http://localhost:3000 · API: http://localhost:8080 · Health: /healthz · Metrics: /metrics
+```
+
+### 4.2 PostgreSQL integration tests
+```bash
+# Needs a reachable PostgreSQL 16+ (CI provides one automatically)
+TREEWIKI_TEST_DATABASE_URL=postgres://user:pass@localhost:5432/treewiki_test?sslmode=disable \
+  go test ./pkg/pg/ ./services/wiki/ ./services/talk/ ./services/topictree/ \
+    ./services/watchlist/ ./services/governance/ ./services/search/ \
+    ./services/identity/
+```
+
+### 4.3 End-to-end tests (Playwright)
+```bash
+pnpm install
+pnpm exec playwright install chromium --only-shell
+# Terminal 1: PORT=8080 go run ./services/gateway/cmd
+# Terminal 2: pnpm --filter @treewiki/web dev   # http://localhost:3000
+pnpm test:e2e
+```
+
+### 4.4 Configuration reference
+All environment variables are documented in `.env.example`. Key production
+requirements: `JWT_SECRET` (min 32 random chars), `CORS_ALLOWED_ORIGINS`
+(explicit origins), `DATABASE_URL` (durable storage), and optional
+`SENTRY_DSN` (panic reporting).
+
+### 4.5 Social login (Google / GitHub OAuth)
+Set `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` and/or
+`GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET` to enable the provider buttons in
+the sign-in dialog. Register the callback URL in each provider console:
+
+`{OAUTH_REDIRECT_BASE}/api/v1/auth/oauth/{google,github}/callback`
+
+First login with a verified provider email creates a linked account
+(`oauth_identities`); a matching local email is linked to the existing
+account. Provider auth satisfies the login factor, so OAuth sign-in does
+not prompt for TOTP.
+

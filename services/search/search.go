@@ -19,10 +19,33 @@ type SearchResult struct {
 	Snippet  string         `json:"snippet"`
 }
 
+// SearchBackend abstracts full-text search so handlers run on the in-memory
+// SearchIndex (development/tests) or PostgresSearchBackend (production SQL
+// full-text over the pages table).
+type SearchBackend interface {
+	Index(doc *SearchDocument)
+	Remove(id string)
+	Search(query string, namespace int) []SearchResult
+	Autocomplete(prefix string, limit int) []string
+	SearchFaceted(query string, namespace int, category string, from, to string) []SearchResult
+}
+
+// MediaStorage abstracts media metadata persistence.
+type MediaStorage interface {
+	Add(a *MediaAsset) error
+	Get(id string) (*MediaAsset, bool)
+	List() []*MediaAsset
+}
+
 type SearchIndex struct {
 	mu   sync.RWMutex
 	docs map[string]*SearchDocument
 }
+
+var (
+	_ SearchBackend = (*SearchIndex)(nil)
+	_ MediaStorage  = (*MediaStore)(nil)
+)
 
 func NewSearchIndex() *SearchIndex {
 	return &SearchIndex{docs: make(map[string]*SearchDocument)}
@@ -163,21 +186,22 @@ type MediaAsset struct {
 }
 
 type MediaStore struct {
-	mu      sync.RWMutex
-	assets  map[string]*MediaAsset
+	mu     sync.RWMutex
+	assets map[string]*MediaAsset
 }
 
 func NewMediaStore() *MediaStore {
 	return &MediaStore{assets: make(map[string]*MediaAsset)}
 }
 
-func (m *MediaStore) Add(a *MediaAsset) {
+func (m *MediaStore) Add(a *MediaAsset) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if a.ID == "" {
 		a.ID = "media-" + a.Filename
 	}
 	m.assets[a.ID] = a
+	return nil
 }
 
 func (m *MediaStore) Get(id string) (*MediaAsset, bool) {

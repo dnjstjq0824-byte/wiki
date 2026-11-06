@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/dnjstjqppk-dev/treewiki/pkg/validate"
 	"github.com/dnjstjqppk-dev/treewiki/services/identity"
 )
 
@@ -96,10 +97,10 @@ func (h *Handler) PutPage(w http.ResponseWriter, r *http.Request) {
 	userRole := ctx.Role
 
 	var body struct {
-		Wikitext     string `json:"wikitext"`
-		Summary      string `json:"summary"`
-		IsMinor      bool   `json:"is_minor"`
-		ParentRevID  string `json:"parent_revision_id"`
+		Wikitext    string `json:"wikitext"`
+		Summary     string `json:"summary"`
+		IsMinor     bool   `json:"is_minor"`
+		ParentRevID string `json:"parent_revision_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		h.writeErr(w, http.StatusBadRequest, "invalid json")
@@ -224,6 +225,13 @@ func (h *Handler) Revisions(w http.ResponseWriter, r *http.Request) {
 		title = r.PathValue("title")
 	}
 	revs := h.service.GetRevisions(ns, title)
+	if revs == nil {
+		revs = []*Revision{}
+	}
+	if validate.HasPagination(r) {
+		h.writeJSON(w, http.StatusOK, validate.Paginate(revs, validate.ParsePagination(r, 50)))
+		return
+	}
 	h.writeJSON(w, http.StatusOK, revs)
 }
 
@@ -251,6 +259,13 @@ func (h *Handler) SetProtection(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) ListPages(w http.ResponseWriter, r *http.Request) {
 	ns := parseNamespaceParam(r.PathValue("namespace"))
 	pages := h.service.ListPages(ns)
+	if pages == nil {
+		pages = []*Page{}
+	}
+	if validate.HasPagination(r) {
+		h.writeJSON(w, http.StatusOK, validate.Paginate(pages, validate.ParsePagination(r, 50)))
+		return
+	}
 	h.writeJSON(w, http.StatusOK, pages)
 }
 
@@ -300,6 +315,20 @@ func (h *Handler) Rollback(w http.ResponseWriter, r *http.Request) {
 	page, err := h.service.FastRollback(ns, title, ctx.UserID, ctx.Role)
 	if err != nil {
 		h.writeErr(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	h.writeJSON(w, http.StatusOK, page)
+}
+
+func (h *Handler) RandomPage(w http.ResponseWriter, r *http.Request) {
+	var ns *Namespace
+	if raw := r.URL.Query().Get("namespace"); raw != "" {
+		parsed := parseNamespaceParam(raw)
+		ns = &parsed
+	}
+	page, err := h.service.RandomPage(ns)
+	if err != nil {
+		h.writeErr(w, http.StatusNotFound, err.Error())
 		return
 	}
 	h.writeJSON(w, http.StatusOK, page)

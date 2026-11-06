@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   postgres:
     image: postgres:16-alpine
@@ -71,9 +69,50 @@ services:
       timeout: 5s
       retries: 3
 
+  gateway:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: treewiki-gateway
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+      ENV: production
+      DATABASE_URL: postgres://treewiki_admin:treewiki_dev_secret_password@postgres:5432/treewiki_db?sslmode=disable
+      JWT_SECRET: ${JWT_SECRET:-treewiki_jwt_super_secure_secret_key_change_in_production_2026}
+      APP_VERSION: ${APP_VERSION:-1.0.0}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-300}
+      RATE_LIMIT_WINDOW_SECONDS: ${RATE_LIMIT_WINDOW_SECONDS:-60}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+    container_name: treewiki-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: "3000"
+      NUXT_PUBLIC_API_BASE: ${NUXT_PUBLIC_API_BASE:-http://localhost:8080/api/v1}
+      NUXT_API_BASE_INTERNAL: http://gateway:8080/api/v1
+    depends_on:
+      gateway:
+        condition: service_healthy
+
 volumes:
   postgres_data:
   redis_data:
   minio_data:
   meilisearch_data:
+  uploads_data:
 

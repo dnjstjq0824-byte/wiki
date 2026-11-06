@@ -26,11 +26,11 @@ const (
 
 // NamespaceInfo holds metadata for a namespace
 type NamespaceInfo struct {
-	ID               int    `json:"id"`
-	Name             string `json:"name"`
-	CanonicalName    string `json:"canonical_name"`
-	IsTalk           bool   `json:"is_talk"`
-	IsSearchable     bool   `json:"is_searchable"`
+	ID                int    `json:"id"`
+	Name              string `json:"name"`
+	CanonicalName     string `json:"canonical_name"`
+	IsTalk            bool   `json:"is_talk"`
+	IsSearchable      bool   `json:"is_searchable"`
 	DefaultProtection string `json:"default_protection"`
 }
 
@@ -55,17 +55,17 @@ var namespaceRegistry = map[Namespace]NamespaceInfo{
 
 // NamespaceNameToID maps a namespace name to its ID
 var namespaceNameToID = map[string]Namespace{
-	"":           NSMain,
-	"Main":       NSMain,
-	"Talk":       NSTalk,
-	"User":       NSUser,
-	"User_talk":  NSUserTalk,
-	"Treewiki":   NSTreewiki,
-	"File":       NSFile,
-	"Template":   NSTemplate,
-	"Help":       NSHelp,
-	"Category":   NSCategory,
-	"TopicTree":  NSTopicTree,
+	"":          NSMain,
+	"Main":      NSMain,
+	"Talk":      NSTalk,
+	"User":      NSUser,
+	"User_talk": NSUserTalk,
+	"Treewiki":  NSTreewiki,
+	"File":      NSFile,
+	"Template":  NSTemplate,
+	"Help":      NSHelp,
+	"Category":  NSCategory,
+	"TopicTree": NSTopicTree,
 }
 
 // GetNamespaceInfo returns metadata for a namespace ID

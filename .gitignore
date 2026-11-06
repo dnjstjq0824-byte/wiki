@@ -17,6 +17,9 @@ bin/
 Thumbs.db
 .turbo/
 .cache/
+test-results/
+playwright-report/
+uploads/
 
 # Environment files
 .env

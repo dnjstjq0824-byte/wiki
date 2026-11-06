@@ -42,4 +42,3 @@ func TestMerge3(t *testing.T) {
 		t.Errorf("expected conflict markers in merged result, got: %+v", merged3)
 	}
 }
-

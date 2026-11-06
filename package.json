@@ -10,10 +10,12 @@
     "build": "turbo run build",
     "deploy": "wrangler deploy",
     "test": "turbo run test",
+    "test:e2e": "playwright test -c tests/playwright.config.ts",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.0",
     "prettier": "^3.3.0",
     "turbo": "^2.0.0",
     "typescript": "^5.5.0",

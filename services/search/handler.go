@@ -10,14 +10,19 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
+	"time"
+
+	"github.com/dnjstjqppk-dev/treewiki/pkg/validate"
+	"github.com/dnjstjqppk-dev/treewiki/services/identity"
 )
 
 type Handler struct {
-	index *SearchIndex
-	media *MediaStore
+	index SearchBackend
+	media MediaStorage
 }
 
-func NewHandler(index *SearchIndex, media *MediaStore) *Handler {
+func NewHandler(index SearchBackend, media MediaStorage) *Handler {
 	return &Handler{index: index, media: media}
 }
 
@@ -38,16 +43,40 @@ func (h *Handler) Search(w http.ResponseWriter, r *http.Request) {
 	from := r.URL.Query().Get("from")
 	to := r.URL.Query().Get("to")
 	res := h.index.SearchFaceted(q, ns, category, from, to)
+	if res == nil {
+		res = []SearchResult{}
+	}
+	if validate.HasPagination(r) {
+		h.writeJSON(w, http.StatusOK, validate.Paginate(res, validate.ParsePagination(r, 20)))
+		return
+	}
 	h.writeJSON(w, http.StatusOK, res)
 }
 
 func (h *Handler) Autocomplete(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query().Get("q")
-	h.writeJSON(w, http.StatusOK, h.index.Autocomplete(q, 10))
+	if q == "" {
+		q = r.URL.Query().Get("prefix")
+	}
+	limit := 10
+	if raw := r.URL.Query().Get("limit"); raw != "" {
+		if n, err := strconv.Atoi(raw); err == nil && n > 0 && n <= 50 {
+			limit = n
+		}
+	}
+	h.writeJSON(w, http.StatusOK, h.index.Autocomplete(q, limit))
 }
 
 func (h *Handler) ListMedia(w http.ResponseWriter, r *http.Request) {
-	h.writeJSON(w, http.StatusOK, h.media.List())
+	assets := h.media.List()
+	if assets == nil {
+		assets = []*MediaAsset{}
+	}
+	if validate.HasPagination(r) {
+		h.writeJSON(w, http.StatusOK, validate.Paginate(assets, validate.ParsePagination(r, 20)))
+		return
+	}
+	h.writeJSON(w, http.StatusOK, assets)
 }
 func (h *Handler) UploadMedia(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseMultipartForm(32 << 20); err != nil {
@@ -70,20 +99,38 @@ func (h *Handler) UploadMedia(w http.ResponseWriter, r *http.Request) {
 	hash := sha256.Sum256(data)
 	sha := hex.EncodeToString(hash[:])
 
+	// Sanitize the client filename (traversal defense) and cap its length.
+	filename := filepath.Base(header.Filename)
+	if filename == "" || filename == "." || filename == "/" {
+		h.writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid filename"})
+		return
+	}
+	if len([]rune(filename)) > 255 {
+		h.writeJSON(w, http.StatusBadRequest, map[string]string{"error": "filename too long (max 255 characters)"})
+		return
+	}
 	_ = os.MkdirAll("uploads", 0755)
-	dest := filepath.Join("uploads", header.Filename)
-	_ = os.WriteFile(dest, data, 0644)
+	dest := filepath.Join("uploads", filename)
+	if err := os.WriteFile(dest, data, 0644); err != nil {
+		h.writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "store file failed"})
+		return
+	}
 
+	// Authenticated identity wins over the spoofable form field.
+	uploaderID := r.FormValue("uploader_id")
+	if ctx := identity.GetUserContext(r); ctx.UserID != "" {
+		uploaderID = ctx.UserID
+	}
 	asset := &MediaAsset{
-		Filename:     header.Filename,
-		OriginalName: header.Filename,
+		Filename:     filename,
+		OriginalName: filename,
 		MimeType:     header.Header.Get("Content-Type"),
 		FileSize:     int64(len(data)),
 		S3Key:        dest,
 		SHA256:       sha,
 		LicenseType:  r.FormValue("license_type"),
-		UploaderID:   r.FormValue("uploader_id"),
-		CreatedAt:    "now",
+		UploaderID:   uploaderID,
+		CreatedAt:    time.Now().UTC().Format(time.RFC3339),
 	}
 	if asset.LicenseType == "" {
 		asset.LicenseType = "CC_BY_SA_4_0"
@@ -92,7 +139,10 @@ func (h *Handler) UploadMedia(w http.ResponseWriter, r *http.Request) {
 		h.writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid license type"})
 		return
 	}
-	h.media.Add(asset)
+	if err := h.media.Add(asset); err != nil {
+		h.writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return
+	}
 	h.writeJSON(w, http.StatusCreated, asset)
 }
 

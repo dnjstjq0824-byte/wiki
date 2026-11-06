@@ -53,4 +53,3 @@ func ValidateTOTPCode(secret, code string, t time.Time) bool {
 	}
 	return false
 }
-

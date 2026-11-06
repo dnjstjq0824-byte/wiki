@@ -40,4 +40,3 @@ func TestDiffLines(t *testing.T) {
 		})
 	}
 }
-

@@ -1,10 +1,10 @@
 package topictree
 
 type TopicService struct {
-	store *TopicStore
+	store TopicStorage
 }
 
-func NewTopicService(store *TopicStore) *TopicService {
+func NewTopicService(store TopicStorage) *TopicService {
 	return &TopicService{store: store}
 }
 

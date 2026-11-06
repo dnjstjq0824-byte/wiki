@@ -23,19 +23,19 @@ type ParseResult struct {
 }
 
 var (
-	linkRegex     = regexp.MustCompile(`\[\[([^\]|]+)(?:\|([^\]]+))?\]\]`)
-	categoryRegex = regexp.MustCompile(`\[\[(?:Category|분류):([^\]]+)\]\]`)
-	boldRegex     = regexp.MustCompile(`'''(.*?)'''|\*\*(.*?)\*\*`)
-	italicRegex   = regexp.MustCompile(`''(.*?)''|\*(.*?)\*`)
-	infoboxRegex   = regexp.MustCompile(`(?s)\{\{Infobox\s*\|?(.*?)\}\}`)
-	collapseRegex  = regexp.MustCompile(`\{\{Collapse\|([^|]*)\|([^}]*)\}\}`)
-	calloutRegex   = regexp.MustCompile(`(?m)^> \[!(NOTE|WARNING|TIP)\]\s*(.*)$`)
-	latexBlockRegex = regexp.MustCompile(`(?s)\$\$(.*?)\$\$`)
+	linkRegex        = regexp.MustCompile(`\[\[([^\]|]+)(?:\|([^\]]+))?\]\]`)
+	categoryRegex    = regexp.MustCompile(`\[\[(?:Category|분류):([^\]]+)\]\]`)
+	boldRegex        = regexp.MustCompile(`'''(.*?)'''|\*\*(.*?)\*\*`)
+	italicRegex      = regexp.MustCompile(`''(.*?)''|\*(.*?)\*`)
+	infoboxRegex     = regexp.MustCompile(`(?s)\{\{Infobox\s*\|?(.*?)\}\}`)
+	collapseRegex    = regexp.MustCompile(`\{\{Collapse\|([^|]*)\|([^}]*)\}\}`)
+	calloutRegex     = regexp.MustCompile(`(?m)^> \[!(NOTE|WARNING|TIP)\]\s*(.*)$`)
+	latexBlockRegex  = regexp.MustCompile(`(?s)\$\$(.*?)\$\$`)
 	latexInlineRegex = regexp.MustCompile(`\$(.+?)\$`)
-	refRegex       = regexp.MustCompile(`<ref>(.*?)</ref>`)
-	h3Regex       = regexp.MustCompile(`(?m)^===\s*(.*?)\s*===$|^###\s*(.*?)$`)
-	h2Regex       = regexp.MustCompile(`(?m)^==\s*(.*?)\s*==$|^##\s*(.*?)$`)
-	h1Regex       = regexp.MustCompile(`(?m)^=\s*(.*?)\s*=$|^#\s*(.*?)$`)
+	refRegex         = regexp.MustCompile(`<ref>(.*?)</ref>`)
+	h3Regex          = regexp.MustCompile(`(?m)^===\s*(.*?)\s*===$|^###\s*(.*?)$`)
+	h2Regex          = regexp.MustCompile(`(?m)^==\s*(.*?)\s*==$|^##\s*(.*?)$`)
+	h1Regex          = regexp.MustCompile(`(?m)^=\s*(.*?)\s*=$|^#\s*(.*?)$`)
 )
 
 // ParseWikitext transforms wikitext/markdown into sanitized HTML with TOC and categories
@@ -197,21 +197,21 @@ func ParseWikitext(input string) ParseResult {
 		return `<div class="callout callout-` + kind + `">` + html.EscapeString(text) + `</div>`
 	})
 	if len(references) > 0 {
-	// LaTeX blocks
-	body = latexBlockRegex.ReplaceAllStringFunc(body, func(m string) string {
-		sub := latexBlockRegex.FindStringSubmatch(m)
-		if len(sub) < 2 {
-			return m
-		}
-		return `<div class="math-block">` + html.EscapeString(sub[1]) + `</div>`
-	})
-	body = latexInlineRegex.ReplaceAllStringFunc(body, func(m string) string {
-		sub := latexInlineRegex.FindStringSubmatch(m)
-		if len(sub) < 2 {
-			return m
-		}
-		return `<span class="math-inline">` + html.EscapeString(sub[1]) + `</span>`
-	})
+		// LaTeX blocks
+		body = latexBlockRegex.ReplaceAllStringFunc(body, func(m string) string {
+			sub := latexBlockRegex.FindStringSubmatch(m)
+			if len(sub) < 2 {
+				return m
+			}
+			return `<div class="math-block">` + html.EscapeString(sub[1]) + `</div>`
+		})
+		body = latexInlineRegex.ReplaceAllStringFunc(body, func(m string) string {
+			sub := latexInlineRegex.FindStringSubmatch(m)
+			if len(sub) < 2 {
+				return m
+			}
+			return `<span class="math-inline">` + html.EscapeString(sub[1]) + `</span>`
+		})
 		body += "\n\n<section class=\"wiki-references\"><h2>References</h2><ol>"
 		for i, ref := range references {
 			idx := i + 1
@@ -221,7 +221,7 @@ func ParseWikitext(input string) ParseResult {
 	}
 
 	return ParseResult{
-		HTML:       body,
+		HTML:       SanitizeHTML(body),
 		Headings:   headings,
 		Categories: categories,
 		References: references,
@@ -307,4 +307,3 @@ func slugify(s string) string {
 	s = strings.ReplaceAll(s, " ", "_")
 	return s
 }
-

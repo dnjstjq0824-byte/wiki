@@ -23,6 +23,28 @@
       </div>
     </section>
 
+    <!-- Live Platform Stats -->
+    <section aria-label="Platform statistics" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm text-center">
+        <div v-if="statsLoading" class="h-7 flex items-center justify-center text-slate-300"><span class="inline-block animate-spin">⌛</span></div>
+        <div v-else class="text-2xl font-extrabold text-forest-700 dark:text-forest-400 font-mono">{{ formatCount(stats?.pages) }}</div>
+        <div class="text-[11px] text-slate-500 mt-0.5 font-semibold uppercase tracking-wide">Articles</div>
+      </div>
+      <div class="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm text-center">
+        <div v-if="statsLoading" class="h-7 flex items-center justify-center text-slate-300"><span class="inline-block animate-spin">⌛</span></div>
+        <div v-else class="text-2xl font-extrabold text-forest-700 dark:text-forest-400 font-mono">{{ formatCount(stats?.topics) }}</div>
+        <div class="text-[11px] text-slate-500 mt-0.5 font-semibold uppercase tracking-wide">Topic Nodes</div>
+      </div>
+      <div class="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm text-center">
+        <div class="text-2xl font-extrabold text-forest-700 dark:text-forest-400">4.0</div>
+        <div class="text-[11px] text-slate-500 mt-0.5 font-semibold uppercase tracking-wide">CC BY-SA License</div>
+      </div>
+      <NuxtLink to="/special/random" class="p-4 rounded-xl bg-forest-600 hover:bg-forest-500 text-white shadow-sm text-center transition block">
+        <div class="text-2xl font-extrabold">🎲</div>
+        <div class="text-[11px] mt-0.5 font-semibold uppercase tracking-wide">Random Article</div>
+      </NuxtLink>
+    </section>
+
     <!-- Main Grid: Featured Article & Topic Trees -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <!-- Featured Article Card -->
@@ -51,17 +73,17 @@
         </div>
       </div>
 
-      <!-- Quick Knowledge Taxonomy -->
+      <!-- Foundational Articles -->
       <div class="p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
         <h3 class="font-bold text-base text-slate-900 dark:text-slate-100 border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center gap-2">
-          <span>🌿</span> Major Knowledge Trees
+          <span>🌿</span> Foundational Articles
         </h3>
         <ul class="space-y-2.5 text-sm">
-          <li v-for="tree in majorTrees" :key="tree.slug" class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/60 transition">
-            <NuxtLink :to="`/w/${tree.slug}`" class="font-medium text-slate-700 dark:text-slate-300 hover:text-forest-600 flex items-center gap-2">
-              <span>{{ tree.icon }}</span> {{ tree.name }}
+          <li v-for="art in foundationArticles" :key="art.slug" class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/60 transition">
+            <NuxtLink :to="`/w/${art.slug}`" class="font-medium text-slate-700 dark:text-slate-300 hover:text-forest-600 flex items-center gap-2">
+              <span>{{ art.icon }}</span> {{ art.name }}
             </NuxtLink>
-            <span class="text-xs text-slate-400 font-mono">{{ tree.count }} arts</span>
+            <span class="text-slate-300 dark:text-slate-600">→</span>
           </li>
         </ul>
       </div>
@@ -70,12 +92,49 @@
 </template>
 
 <script setup lang="ts">
-const majorTrees = [
-  { name: 'Computer Science', slug: 'Computer_Science', icon: '💻', count: '1,420' },
-  { name: 'Mathematics', slug: 'Mathematics', icon: '📐', count: '980' },
-  { name: 'Physics & Astronomy', slug: 'Physics', icon: '⚛️', count: '1,150' },
-  { name: 'Biology & Medicine', slug: 'Biology', icon: '🧬', count: '890' },
-  { name: 'Philosophy & Ethics', slug: 'Philosophy', icon: '🏛️', count: '640' }
-]
-</script>
+import { ref, onMounted } from 'vue'
+import { useApi } from '../composables/useApi'
 
+interface PlatformStats {
+  version: string
+  database: string
+  pages: number
+  topics: number
+  timestamp: string
+}
+
+const foundationArticles = [
+  { name: 'Computer Science', slug: 'Computer_Science', icon: '💻' },
+  { name: 'Algorithms', slug: 'Algorithms', icon: '⚙️' },
+  { name: 'Data Structures', slug: 'Data_Structures', icon: '🧱' },
+  { name: 'Graph Theory', slug: 'Graph_Theory', icon: '🕸️' },
+  { name: 'Myers Diff', slug: 'Myers_Diff', icon: '⚖️' },
+]
+
+const api = useApi()
+const stats = ref<PlatformStats | null>(null)
+const statsLoading = ref(true)
+
+const formatCount = (n: number | undefined) => {
+  if (n === undefined || n === null) return '—'
+  return n.toLocaleString('en-US')
+}
+
+useSeoMeta({
+  title: 'Treewiki — Collaborative Knowledge Platform',
+  description: 'A global collaborative knowledge platform organizing human understanding into topic trees, revision ledgers, and neutral encyclopedic references. Free under CC BY-SA 4.0.',
+  ogTitle: 'Treewiki — Collaborative Knowledge Platform',
+  ogDescription: 'Structured knowledge, topic trees, and immutable revision ledgers. Free under CC BY-SA 4.0.',
+  ogType: 'website',
+})
+
+onMounted(async () => {
+  try {
+    stats.value = await api.get<PlatformStats>('/stats')
+  } catch (err) {
+    console.error('Failed to load platform stats:', err)
+  } finally {
+    statsLoading.value = false
+  }
+})
+</script>

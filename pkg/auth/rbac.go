@@ -5,15 +5,15 @@ import (
 )
 
 const (
-	RoleAnonymous    = "ANONYMOUS"
-	RoleRegistered   = "REGISTERED"
+	RoleAnonymous     = "ANONYMOUS"
+	RoleRegistered    = "REGISTERED"
 	RoleAutoConfirmed = "AUTOCONFIRMED"
-	RoleRollbacker   = "ROLLBACKER"
-	RoleEditor       = "EDITOR"
-	RoleSysop        = "SYSOP"
-	RoleOversight    = "OVERSIGHT"
-	RoleBureaucrat   = "BUREAUCRAT"
-	RoleSystemAdmin  = "SYSTEM_ADMIN"
+	RoleRollbacker    = "ROLLBACKER"
+	RoleEditor        = "EDITOR"
+	RoleSysop         = "SYSOP"
+	RoleOversight     = "OVERSIGHT"
+	RoleBureaucrat    = "BUREAUCRAT"
+	RoleSystemAdmin   = "SYSTEM_ADMIN"
 )
 
 var roleLevels = map[string]int{
@@ -55,4 +55,3 @@ func EffectiveRole(baseRole string, registeredAt time.Time, editCount int) strin
 	}
 	return baseRole
 }
-

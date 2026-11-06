@@ -113,4 +113,3 @@ func ValidateToken(tokenStr, secretKey string) (*Claims, error) {
 
 	return claims, nil
 }
-

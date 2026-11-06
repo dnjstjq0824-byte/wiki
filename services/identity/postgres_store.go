@@ -7,7 +7,10 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	treepg "github.com/dnjstjqppk-dev/treewiki/pkg/pg"
 )
 
 type PostgresUserStore struct {
@@ -16,6 +19,48 @@ type PostgresUserStore struct {
 
 func NewPostgresUserStore(pool *pgxpool.Pool) *PostgresUserStore {
 	return &PostgresUserStore{pool: pool}
+}
+
+const userColumns = `id, username, email, password_hash, role, edit_count, is_blocked, is_bot, profile_bio, avatar_url, created_at, updated_at`
+
+func scanUser(row pgx.Row) (*User, error) {
+	var (
+		u      User
+		id     pgtype.UUID
+		email  pgtype.Text
+		pwHash pgtype.Text
+		bio    pgtype.Text
+		avatar pgtype.Text
+	)
+	err := row.Scan(
+		&id,
+		&u.Username,
+		&email,
+		&pwHash,
+		&u.Role,
+		&u.EditCount,
+		&u.IsBlocked,
+		&u.IsBot,
+		&bio,
+		&avatar,
+		&u.CreatedAt,
+		&u.UpdatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrUserNotFound
+		}
+		return nil, err
+	}
+	u.ID = treepg.UUIDString(id)
+	if email.Valid {
+		mail := email.String
+		u.Email = &mail
+	}
+	u.PasswordHash = treepg.TextOrEmpty(pwHash)
+	u.ProfileBio = treepg.TextOrEmpty(bio)
+	u.AvatarURL = treepg.TextOrEmpty(avatar)
+	return &u, nil
 }
 
 func (s *PostgresUserStore) Create(user *User) error {
@@ -27,16 +72,16 @@ func (s *PostgresUserStore) Create(user *User) error {
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 	`
 	_, err := s.pool.Exec(ctx, query,
-		user.ID,
+		treepg.UUIDVal(user.ID),
 		user.Username,
 		user.Email,
-		user.PasswordHash,
+		treepg.TextVal(user.PasswordHash),
 		user.Role,
 		user.EditCount,
 		user.IsBlocked,
 		user.IsBot,
-		user.ProfileBio,
-		user.AvatarURL,
+		treepg.TextVal(user.ProfileBio),
+		treepg.TextVal(user.AvatarURL),
 		user.CreatedAt,
 		user.UpdatedAt,
 	)
@@ -56,99 +101,24 @@ func (s *PostgresUserStore) GetByID(id string) (*User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	query := `
-		SELECT id, username, email, password_hash, role, edit_count, is_blocked, is_bot, profile_bio, avatar_url, created_at, updated_at
-		FROM users
-		WHERE id = $1
-	`
-	var u User
-	err := s.pool.QueryRow(ctx, query, id).Scan(
-		&u.ID,
-		&u.Username,
-		&u.Email,
-		&u.PasswordHash,
-		&u.Role,
-		&u.EditCount,
-		&u.IsBlocked,
-		&u.IsBot,
-		&u.ProfileBio,
-		&u.AvatarURL,
-		&u.CreatedAt,
-		&u.UpdatedAt,
-	)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrUserNotFound
-		}
-		return nil, err
-	}
-	return &u, nil
+	query := `SELECT ` + userColumns + ` FROM users WHERE id = $1`
+	return scanUser(s.pool.QueryRow(ctx, query, treepg.UUIDVal(id)))
 }
 
 func (s *PostgresUserStore) GetByUsername(username string) (*User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	query := `
-		SELECT id, username, email, password_hash, role, edit_count, is_blocked, is_bot, profile_bio, avatar_url, created_at, updated_at
-		FROM users
-		WHERE LOWER(username) = LOWER($1)
-	`
-	var u User
-	err := s.pool.QueryRow(ctx, query, username).Scan(
-		&u.ID,
-		&u.Username,
-		&u.Email,
-		&u.PasswordHash,
-		&u.Role,
-		&u.EditCount,
-		&u.IsBlocked,
-		&u.IsBot,
-		&u.ProfileBio,
-		&u.AvatarURL,
-		&u.CreatedAt,
-		&u.UpdatedAt,
-	)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrUserNotFound
-		}
-		return nil, err
-	}
-	return &u, nil
+	query := `SELECT ` + userColumns + ` FROM users WHERE LOWER(username) = LOWER($1)`
+	return scanUser(s.pool.QueryRow(ctx, query, username))
 }
 
 func (s *PostgresUserStore) GetByEmail(email string) (*User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	query := `
-		SELECT id, username, email, password_hash, role, edit_count, is_blocked, is_bot, profile_bio, avatar_url, created_at, updated_at
-		FROM users
-		WHERE LOWER(email) = LOWER($1)
-	`
-	var u User
-	err := s.pool.QueryRow(ctx, query, email).Scan(
-		&u.ID,
-		&u.Username,
-		&u.Email,
-		&u.PasswordHash,
-		&u.Role,
-		&u.EditCount,
-		&u.IsBlocked,
-		&u.IsBot,
-		&u.ProfileBio,
-		&u.AvatarURL,
-		&u.CreatedAt,
-		&u.UpdatedAt,
-	)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrUserNotFound
-		}
-		return nil, err
-	}
-	return &u, nil
+	query := `SELECT ` + userColumns + ` FROM users WHERE LOWER(email) = LOWER($1)`
+	return scanUser(s.pool.QueryRow(ctx, query, email))
 }
 
 func (s *PostgresUserStore) GetByVerificationToken(token string) (*User, error) {
@@ -159,33 +129,56 @@ func (s *PostgresUserStore) GetByVerificationToken(token string) (*User, error) 
 		return nil, ErrUserNotFound
 	}
 
+	query := `SELECT ` + userColumns + ` FROM users WHERE profile_bio LIKE $1`
+	return scanUser(s.pool.QueryRow(ctx, query, "%token:"+token+"%"))
+}
+
+func (s *PostgresUserStore) GetByOAuthLink(provider, providerUserID string) (*User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	query := `
-		SELECT id, username, email, password_hash, role, edit_count, is_blocked, is_bot, profile_bio, avatar_url, created_at, updated_at
-		FROM users
-		WHERE profile_bio LIKE $1
+		SELECT u.id, u.username, u.email, u.password_hash, u.role, u.edit_count, u.is_blocked, u.is_bot, u.profile_bio, u.avatar_url, u.created_at, u.updated_at
+		FROM users u
+		JOIN oauth_identities o ON o.user_id = u.id
+		WHERE o.provider = $1 AND o.provider_user_id = $2
 	`
-	var u User
-	err := s.pool.QueryRow(ctx, query, "%token:"+token+"%").Scan(
-		&u.ID,
-		&u.Username,
-		&u.Email,
-		&u.PasswordHash,
-		&u.Role,
-		&u.EditCount,
-		&u.IsBlocked,
-		&u.IsBot,
-		&u.ProfileBio,
-		&u.AvatarURL,
-		&u.CreatedAt,
-		&u.UpdatedAt,
+	return scanUser(s.pool.QueryRow(ctx, query, provider, providerUserID))
+}
+
+func (s *PostgresUserStore) CreateOAuthLink(userID, provider, providerUserID string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var owner pgtype.UUID
+	err := s.pool.QueryRow(ctx,
+		`SELECT user_id FROM oauth_identities WHERE provider = $1 AND provider_user_id = $2`,
+		provider, providerUserID,
+	).Scan(&owner)
+	if err == nil {
+		if treepg.UUIDString(owner) == userID {
+			return nil
+		}
+		return ErrOAuthLinkTaken
+	}
+	if !errors.Is(err, pgx.ErrNoRows) {
+		return err
+	}
+
+	_, err = s.pool.Exec(ctx,
+		`INSERT INTO oauth_identities (provider, provider_user_id, user_id) VALUES ($1, $2, $3)`,
+		provider, providerUserID, treepg.UUIDVal(userID),
 	)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrUserNotFound
+		if treepg.IsUniqueViolation(err) {
+			return ErrOAuthLinkTaken
 		}
-		return nil, err
+		if treepg.IsFKViolation(err) {
+			return ErrUserNotFound
+		}
+		return err
 	}
-	return &u, nil
+	return nil
 }
 
 func (s *PostgresUserStore) Update(user *User) error {
@@ -198,16 +191,16 @@ func (s *PostgresUserStore) Update(user *User) error {
 		WHERE id = $1
 	`
 	res, err := s.pool.Exec(ctx, query,
-		user.ID,
+		treepg.UUIDVal(user.ID),
 		user.Username,
 		user.Email,
-		user.PasswordHash,
+		treepg.TextVal(user.PasswordHash),
 		user.Role,
 		user.EditCount,
 		user.IsBlocked,
 		user.IsBot,
-		user.ProfileBio,
-		user.AvatarURL,
+		treepg.TextVal(user.ProfileBio),
+		treepg.TextVal(user.AvatarURL),
 		time.Now().UTC(),
 	)
 	if err != nil {

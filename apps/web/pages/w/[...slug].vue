@@ -41,6 +41,22 @@
       </div>
     </div>
 
+    <!-- Service Error State -->
+    <div
+      v-else-if="loadError"
+      class="bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-900 rounded-xl p-8 shadow-sm space-y-4 text-center"
+    >
+      <div class="text-3xl">📡</div>
+      <h1 class="text-lg font-bold text-slate-800 dark:text-slate-200">Service temporarily unavailable</h1>
+      <p class="text-xs text-slate-500">{{ loadError }}</p>
+      <button
+        @click="fetchArticle"
+        class="px-5 py-2 rounded-lg bg-forest-600 hover:bg-forest-500 text-white font-bold text-xs transition"
+      >
+        Retry
+      </button>
+    </div>
+
     <!-- Rendered Article View -->
     <article
       v-else
@@ -116,6 +132,7 @@ const displayTitle = computed(() => slug.value.replace(/_/g, ' '))
 
 const pending = ref(true)
 const pageNotFound = ref(false)
+const loadError = ref('')
 const articleData = ref<any>(null)
 const renderedBody = ref('')
 const categories = ref<string[]>([])
@@ -123,6 +140,7 @@ const categories = ref<string[]>([])
 const fetchArticle = async () => {
   pending.value = true
   pageNotFound.value = false
+  loadError.value = ''
 
   try {
     const res: any = await api.get(`/pages/0/${slug.value}`)
@@ -145,21 +163,24 @@ const fetchArticle = async () => {
       pageNotFound.value = true
     }
   } catch (err: any) {
-    if (err.status === 404 || err.statusCode === 404) {
+    if (err.status === 404 || err.statusCode === 404 || err.response?.status === 404) {
       pageNotFound.value = true
     } else {
-      // Fallback demo content if server is offline or brand new topic
-      renderedBody.value = `
-        <p><strong>${displayTitle.value}</strong> represents a cornerstone discipline within modern epistemological research.</p>
-        <h2>Foundational Principles</h2>
-        <p>Under the collaborative governance of Treewiki, documentation regarding this subject adheres to strict <a href="/w/Treewiki:NPOV" class="text-sky-600 hover:underline">Neutral Point of View</a> and verifiable source standards.</p>
-      `
-      categories.value = ['Science', 'General Knowledge']
+      loadError.value = 'The article service is unreachable. Check your connection and try again.'
+      console.error('Failed to load article:', err)
     }
   } finally {
     pending.value = false
   }
 }
+
+useSeoMeta({
+  title: () => `${displayTitle.value} — Treewiki`,
+  description: () => `Read ${displayTitle.value} on Treewiki, the free collaborative knowledge platform (CC BY-SA 4.0).`,
+  ogTitle: () => `${displayTitle.value} — Treewiki`,
+  ogDescription: () => `Read ${displayTitle.value} on Treewiki.`,
+  ogType: 'article',
+})
 
 watch(slug, () => {
   fetchArticle()

@@ -80,4 +80,3 @@ func TestTalkWorkflow(t *testing.T) {
 		t.Errorf("expected 1 arbitration, got %d", len(arbs))
 	}
 }
-

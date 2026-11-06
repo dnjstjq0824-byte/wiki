@@ -238,6 +238,13 @@ const formatTimestamp = (ts: string) => {
   }
 }
 
+useSeoMeta({
+  title: 'Recent Changes — Treewiki',
+  description: 'Real-time ledger of page edits, creations, and editorial activity across Treewiki.',
+  ogTitle: 'Recent Changes — Treewiki',
+  ogType: 'website',
+})
+
 onMounted(() => {
   loadChanges()
 })

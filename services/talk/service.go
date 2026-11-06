@@ -1,17 +1,34 @@
 package talk
 
 import (
+	"fmt"
 	"regexp"
+	"strings"
 )
 
 var mentionRe = regexp.MustCompile(`@([a-zA-Z0-9_]+)`)
 
 type TalkService struct {
-	store *TalkStore
+	store TalkStorage
 }
 
-func NewTalkService(store *TalkStore) *TalkService {
+func NewTalkService(store TalkStorage) *TalkService {
 	return &TalkService{store: store}
+}
+
+// normalizeVoteChoice maps UI and legacy vote labels to the canonical
+// SUPPORT / OPPOSE / NEUTRAL vocabulary the frontend renders.
+func normalizeVoteChoice(raw string) (string, error) {
+	switch strings.ToUpper(strings.TrimSpace(raw)) {
+	case "SUPPORT", "PRO":
+		return "SUPPORT", nil
+	case "OPPOSE", "CON":
+		return "OPPOSE", nil
+	case "NEUTRAL", "ABSTAIN":
+		return "NEUTRAL", nil
+	default:
+		return "", fmt.Errorf("invalid vote choice %q (want SUPPORT, OPPOSE, or NEUTRAL)", raw)
+	}
 }
 
 func (s *TalkService) CreateThread(pageKey, title, authorID string) (*TalkThread, error) {
@@ -64,11 +81,19 @@ func (s *TalkService) CreateRFC(threadID, question string, quorum int) (*RFCPoll
 }
 
 func (s *TalkService) VoteRFC(rfcID, userID, choice string) error {
-	return s.store.VoteRFC(rfcID, RFCVote{UserID: userID, Choice: choice})
+	canonical, err := normalizeVoteChoice(choice)
+	if err != nil {
+		return err
+	}
+	return s.store.VoteRFC(rfcID, RFCVote{UserID: userID, Choice: canonical})
 }
 
 func (s *TalkService) GetRFC(id string) (*RFCPoll, error) {
 	return s.store.GetRFC(id)
+}
+
+func (s *TalkService) GetRFCByThread(threadID string) (*RFCPoll, error) {
+	return s.store.GetRFCByThread(threadID)
 }
 
 func (s *TalkService) CloseRFC(id string) error {
@@ -125,4 +150,3 @@ func extractMentions(content string) []string {
 	}
 	return out
 }
-

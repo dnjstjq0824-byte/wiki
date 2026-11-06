@@ -38,4 +38,3 @@ func TestWatchlistOperations(t *testing.T) {
 		t.Errorf("user should not be watching after removal")
 	}
 }
-

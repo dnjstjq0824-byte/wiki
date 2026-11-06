@@ -2,11 +2,13 @@ package identity
 
 import (
 	"errors"
+	"net/http"
 	"strings"
+	"sync"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/dnjstjqppk-dev/treewiki/pkg/auth"
+	"github.com/google/uuid"
 )
 
 var (
@@ -19,6 +21,14 @@ var (
 type IdentityService struct {
 	store     UserStore
 	jwtSecret string
+
+	oauthMu           sync.Mutex
+	oauthProviders    map[string]*OAuthProvider
+	oauthStates       map[string]oauthStatePending
+	oauthCodes        map[string]oauthCodePending
+	oauthHTTP         *http.Client
+	oauthFrontendURL  string
+	oauthRedirectBase string
 }
 
 func NewIdentityService(store UserStore, jwtSecret string) *IdentityService {
@@ -42,18 +52,18 @@ func (s *IdentityService) Register(req RegisterRequest) (*AuthResponse, error) {
 	email := strings.TrimSpace(req.Email)
 
 	user := &User{
-		ID:                  uuid.New().String(),
-		Username:            req.Username,
-		Email:               &email,
-		PasswordHash:        hash,
-		Role:                auth.RoleRegistered,
-		EditCount:           0,
-		IsBlocked:           false,
-		IsBot:               false,
-		EmailVerified:       false,
-		EmailVerifyToken:    uuid.New().String(),
-		CreatedAt:           now,
-		UpdatedAt:           now,
+		ID:               uuid.New().String(),
+		Username:         req.Username,
+		Email:            &email,
+		PasswordHash:     hash,
+		Role:             auth.RoleRegistered,
+		EditCount:        0,
+		IsBlocked:        false,
+		IsBot:            false,
+		EmailVerified:    false,
+		EmailVerifyToken: uuid.New().String(),
+		CreatedAt:        now,
+		UpdatedAt:        now,
 	}
 
 	if err := s.store.Create(user); err != nil {
@@ -333,16 +343,15 @@ func (s *IdentityService) GetVerificationToken(userID string) (string, error) {
 }
 func toUserPublic(u *User) UserPublic {
 	return UserPublic{
-		ID:         u.ID,
-		Username:   u.Username,
-		Role:       auth.EffectiveRole(u.Role, u.CreatedAt, u.EditCount),
-		EditCount:  u.EditCount,
-		Badges:    u.Badges,
+		ID:                u.ID,
+		Username:          u.Username,
+		Role:              auth.EffectiveRole(u.Role, u.CreatedAt, u.EditCount),
+		EditCount:         u.EditCount,
+		Badges:            u.Badges,
 		ContributionCount: u.ContributionCount,
-		EmailVerified: u.EmailVerified,
-		ProfileBio: u.ProfileBio,
-		AvatarURL:  u.AvatarURL,
-		CreatedAt:  u.CreatedAt,
+		EmailVerified:     u.EmailVerified,
+		ProfileBio:        u.ProfileBio,
+		AvatarURL:         u.AvatarURL,
+		CreatedAt:         u.CreatedAt,
 	}
 }
-

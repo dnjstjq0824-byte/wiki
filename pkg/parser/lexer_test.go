@@ -44,4 +44,3 @@ Regular text line
 			foundHeading, foundTemplate, foundLink, foundRef, foundTable)
 	}
 }
-

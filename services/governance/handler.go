@@ -3,6 +3,8 @@ package governance
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/dnjstjqppk-dev/treewiki/pkg/validate"
 )
 
 type Handler struct {
@@ -37,7 +39,15 @@ func (h *Handler) AddFilter(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ListFilters(w http.ResponseWriter, r *http.Request) {
-	h.writeJSON(w, http.StatusOK, h.service.ListFilters())
+	items := h.service.ListFilters()
+	if items == nil {
+		items = []*AbuseFilter{}
+	}
+	if validate.HasPagination(r) {
+		h.writeJSON(w, http.StatusOK, validate.Paginate(items, validate.ParsePagination(r, 50)))
+		return
+	}
+	h.writeJSON(w, http.StatusOK, items)
 }
 
 func (h *Handler) Evaluate(w http.ResponseWriter, r *http.Request) {
@@ -69,7 +79,15 @@ func (h *Handler) AddBlock(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ListBlocks(w http.ResponseWriter, r *http.Request) {
-	h.writeJSON(w, http.StatusOK, h.service.ListBlocks())
+	items := h.service.ListBlocks()
+	if items == nil {
+		items = []*Block{}
+	}
+	if validate.HasPagination(r) {
+		h.writeJSON(w, http.StatusOK, validate.Paginate(items, validate.ParsePagination(r, 50)))
+		return
+	}
+	h.writeJSON(w, http.StatusOK, items)
 }
 
 func (h *Handler) AddOversight(w http.ResponseWriter, r *http.Request) {
@@ -78,21 +96,32 @@ func (h *Handler) AddOversight(w http.ResponseWriter, r *http.Request) {
 		h.writeErr(w, http.StatusBadRequest, "invalid json")
 		return
 	}
-	h.service.AddOversight(&o)
+	if err := h.service.AddOversight(&o); err != nil {
+		h.writeErr(w, http.StatusBadRequest, err.Error())
+		return
+	}
 	h.writeJSON(w, http.StatusCreated, o)
 }
 
 func (h *Handler) ListOversight(w http.ResponseWriter, r *http.Request) {
-	h.writeJSON(w, http.StatusOK, h.service.ListOversight())
+	items := h.service.ListOversight()
+	if items == nil {
+		items = []OversightLog{}
+	}
+	if validate.HasPagination(r) {
+		h.writeJSON(w, http.StatusOK, validate.Paginate(items, validate.ParsePagination(r, 50)))
+		return
+	}
+	h.writeJSON(w, http.StatusOK, items)
 }
 
 func (h *Handler) Dump(w http.ResponseWriter, r *http.Request) {
 	h.writeJSON(w, http.StatusOK, map[string]interface{}{
-		"filters":    h.service.ListFilters(),
-		"blocks":     h.service.ListBlocks(),
-		"oversight":  h.service.ListOversight(),
-		"takedowns":  h.service.ListTakedowns(),
-		"recent":     h.service.RecentChanges(),
+		"filters":   h.service.ListFilters(),
+		"blocks":    h.service.ListBlocks(),
+		"oversight": h.service.ListOversight(),
+		"takedowns": h.service.ListTakedowns(),
+		"recent":    h.service.RecentChanges(),
 	})
 }
 func (h *Handler) AddTakedown(w http.ResponseWriter, r *http.Request) {
@@ -109,7 +138,15 @@ func (h *Handler) AddTakedown(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ListTakedowns(w http.ResponseWriter, r *http.Request) {
-	h.writeJSON(w, http.StatusOK, h.service.ListTakedowns())
+	items := h.service.ListTakedowns()
+	if items == nil {
+		items = []*TakedownRequest{}
+	}
+	if validate.HasPagination(r) {
+		h.writeJSON(w, http.StatusOK, validate.Paginate(items, validate.ParsePagination(r, 50)))
+		return
+	}
+	h.writeJSON(w, http.StatusOK, items)
 }
 
 func (h *Handler) UpdateTakedownStatus(w http.ResponseWriter, r *http.Request) {
@@ -128,5 +165,13 @@ func (h *Handler) UpdateTakedownStatus(w http.ResponseWriter, r *http.Request) {
 	h.writeJSON(w, http.StatusOK, map[string]string{"status": "updated"})
 }
 func (h *Handler) RecentChanges(w http.ResponseWriter, r *http.Request) {
-	h.writeJSON(w, http.StatusOK, h.service.RecentChanges())
+	items := h.service.RecentChanges()
+	if items == nil {
+		items = []string{}
+	}
+	if validate.HasPagination(r) {
+		h.writeJSON(w, http.StatusOK, validate.Paginate(items, validate.ParsePagination(r, 50)))
+		return
+	}
+	h.writeJSON(w, http.StatusOK, items)
 }

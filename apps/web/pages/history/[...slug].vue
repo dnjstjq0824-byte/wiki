@@ -268,6 +268,13 @@ const handleRollback = async (revId: string) => {
   }
 }
 
+useSeoMeta({
+  title: () => `Revision History: ${displayTitle.value} — Treewiki`,
+  description: () => `Immutable revision ledger and Myers diff comparison for ${displayTitle.value}.`,
+  ogTitle: () => `Revision History: ${displayTitle.value} — Treewiki`,
+  ogType: 'article',
+})
+
 onMounted(() => {
   loadHistory()
 })

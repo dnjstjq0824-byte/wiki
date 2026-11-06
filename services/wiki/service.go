@@ -10,10 +10,10 @@ import (
 )
 
 type WikiService struct {
-	store *PageStore
+	store PageStorage
 }
 
-func NewWikiService(store *PageStore) *WikiService {
+func NewWikiService(store PageStorage) *WikiService {
 	return &WikiService{store: store}
 }
 
@@ -56,13 +56,15 @@ func (s *WikiService) CreatePage(ns Namespace, rawTitle, content, summary, autho
 		AuthorID:        authorID,
 		ProtectionLevel: level,
 		IsRedirect:      isRedirect,
-		RedirectTarget:   target,
+		RedirectTarget:  target,
 	}
 	if err := s.store.Create(page); err != nil {
 		return nil, err
 	}
 	rev := &Revision{PageID: page.ID, Content: content, Summary: summary, AuthorID: authorID}
-	s.store.AddRevision(rev)
+	if err := s.store.AddRevision(rev); err != nil {
+		return nil, err
+	}
 	page.CurrentRevID = rev.ID
 	_ = s.store.Update(page)
 	srcKey := PageKey(ns, title)
@@ -71,11 +73,16 @@ func (s *WikiService) CreatePage(ns Namespace, rawTitle, content, summary, autho
 	for _, t := range targets {
 		tKeys = append(tKeys, PageKey(NSMain, t))
 	}
-	s.store.RebuildBacklinks(srcKey, tKeys)
+	if err := s.store.RebuildBacklinks(srcKey, tKeys); err != nil {
+		return nil, err
+	}
 	cats := ParseCategories(content)
-	s.store.RebuildCategories(srcKey, cats)
+	if err := s.store.RebuildCategories(srcKey, cats); err != nil {
+		return nil, err
+	}
 	return s.store.Get(ns, title)
 }
+
 // GetPage retrieves a page (non-deleted)
 func (s *WikiService) GetPage(ns Namespace, rawTitle string) (*Page, error) {
 	title := NormalizeTitle(rawTitle)
@@ -157,7 +164,9 @@ func (s *WikiService) UpdatePage(ns Namespace, rawTitle, content, summary, autho
 		IsMinor:          isMinor,
 		ParentRevisionID: oldRevID,
 	}
-	s.store.AddRevision(rev)
+	if err := s.store.AddRevision(rev); err != nil {
+		return nil, err
+	}
 	page.CurrentRevID = rev.ID
 	_ = s.store.Update(page)
 	srcKey := PageKey(ns, title)
@@ -166,11 +175,16 @@ func (s *WikiService) UpdatePage(ns Namespace, rawTitle, content, summary, autho
 	for _, t := range targets {
 		tKeys = append(tKeys, PageKey(NSMain, t))
 	}
-	s.store.RebuildBacklinks(srcKey, tKeys)
+	if err := s.store.RebuildBacklinks(srcKey, tKeys); err != nil {
+		return nil, err
+	}
 	cats := ParseCategories(content)
-	s.store.RebuildCategories(srcKey, cats)
+	if err := s.store.RebuildCategories(srcKey, cats); err != nil {
+		return nil, err
+	}
 	return s.store.Get(ns, title)
 }
+
 // DeletePage soft-deletes a page
 func (s *WikiService) DeletePage(ns Namespace, rawTitle, userRole string) error {
 	title := NormalizeTitle(rawTitle)
@@ -218,13 +232,15 @@ func (s *WikiService) MovePage(oldNS Namespace, oldRaw string, newNS Namespace, 
 			AuthorID:        authorID,
 			ProtectionLevel: page.ProtectionLevel,
 			IsRedirect:      true,
-			RedirectTarget:   newTitle,
+			RedirectTarget:  newTitle,
 		}
 		if err := s.store.Create(rp); err != nil {
 			return err
 		}
 		rev := &Revision{PageID: rp.ID, Content: redirectContent, Summary: "redirect", AuthorID: authorID}
-		s.store.AddRevision(rev)
+		if err := s.store.AddRevision(rev); err != nil {
+			return err
+		}
 		rp.CurrentRevID = rev.ID
 		_ = s.store.Update(rp)
 	}
@@ -313,6 +329,7 @@ func (s *WikiService) ListPages(ns Namespace) []*Page {
 	}
 	return out
 }
+
 // GetContributorStats returns edit counts per author across all pages in a namespace
 func (s *WikiService) GetContributorStats(ns Namespace) map[string]int {
 	stats := map[string]int{}
@@ -329,6 +346,7 @@ func (s *WikiService) GetContributorStats(ns Namespace) map[string]int {
 func (s *WikiService) GetTimeline(ns Namespace, rawTitle string) []*Revision {
 	return s.GetRevisions(ns, rawTitle)
 }
+
 // RevertToRevision creates a new revision restoring content from a previous revision
 func (s *WikiService) RevertToRevision(ns Namespace, rawTitle, revID, authorID, userRole string) (*Page, error) {
 	title := NormalizeTitle(rawTitle)
@@ -363,7 +381,9 @@ func (s *WikiService) RevertToRevision(ns Namespace, rawTitle, revID, authorID, 
 		AuthorID:         authorID,
 		ParentRevisionID: oldRevID,
 	}
-	s.store.AddRevision(rev)
+	if err := s.store.AddRevision(rev); err != nil {
+		return nil, err
+	}
 	page.CurrentRevID = rev.ID
 	_ = s.store.Update(page)
 	srcKey := PageKey(ns, title)
@@ -372,9 +392,13 @@ func (s *WikiService) RevertToRevision(ns Namespace, rawTitle, revID, authorID, 
 	for _, t := range targets {
 		tKeys = append(tKeys, PageKey(NSMain, t))
 	}
-	s.store.RebuildBacklinks(srcKey, tKeys)
+	if err := s.store.RebuildBacklinks(srcKey, tKeys); err != nil {
+		return nil, err
+	}
 	cats := ParseCategories(page.Content)
-	s.store.RebuildCategories(srcKey, cats)
+	if err := s.store.RebuildCategories(srcKey, cats); err != nil {
+		return nil, err
+	}
 	return s.store.Get(ns, title)
 }
 
@@ -396,6 +420,16 @@ func (s *WikiService) DiffRevisions(ns Namespace, rawTitle, fromRevID, toRevID s
 	fromLines := strings.Split(fromRev.Content, "\n")
 	toLines := strings.Split(toRev.Content, "\n")
 	return diff.DiffLines(fromLines, toLines), nil
+}
+
+// CountAll returns the number of live pages across all namespaces.
+func (s *WikiService) CountAll() int {
+	return s.store.CountAll()
+}
+
+// RandomPage returns a random live page, optionally filtered by namespace.
+func (s *WikiService) RandomPage(ns *Namespace) (*Page, error) {
+	return s.store.Random(ns)
 }
 
 // FastRollback reverts to the previous revision

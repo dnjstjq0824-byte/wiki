@@ -89,7 +89,8 @@
             </span>
             <div>
               <div class="flex items-center gap-2">
-                <span v-if="thread.is_pinned" class="text-xs" title="Pinned Topic">📌</span>
+                <span v-if="thread.pinned" class="text-xs" title="Pinned Topic">📌</span>
+                <span v-if="thread.locked" class="text-xs" title="Locked Topic">🔒</span>
                 <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">
                   {{ thread.title }}
                 </h3>
@@ -343,8 +344,8 @@ interface TalkThread {
   title: string
   author_id: string
   status: string
-  is_pinned: boolean
-  is_locked: boolean
+  pinned: boolean
+  locked: boolean
   created_at: string
 }
 
@@ -357,13 +358,18 @@ interface TalkComment {
   created_at: string
 }
 
+interface RFCVote {
+  user_id: string
+  choice: string // 'SUPPORT' | 'OPPOSE' | 'NEUTRAL'
+}
+
 interface RFCItem {
   id: string
   thread_id: string
   question: string
   quorum: number
-  is_closed: boolean
-  votes: Record<string, string> // username/author -> 'SUPPORT' | 'OPPOSE' | 'NEUTRAL'
+  closed: boolean
+  votes: RFCVote[]
 }
 
 const route = useRoute()
@@ -430,8 +436,9 @@ const fetchThreadDetails = async (threadId: string) => {
 
   // Attempt to check if an RFC exists for this thread
   try {
-    const rfc = await api.get<RFCItem>(`/talk/rfc/${threadId}`)
+    const rfc = await api.get<RFCItem>(`/talk/threads/${threadId}/rfc`)
     if (rfc && rfc.question) {
+      if (!Array.isArray(rfc.votes)) rfc.votes = []
       threadRFC.value[threadId] = rfc
     }
   } catch {
@@ -466,6 +473,7 @@ const castRFCVote = async (rfcId: string, threadId: string, choice: string) => {
     // Refresh RFC state
     const updated = await api.get<RFCItem>(`/talk/rfc/${rfcId}`)
     if (updated) {
+      if (!Array.isArray(updated.votes)) updated.votes = []
       threadRFC.value[threadId] = updated
     }
   } catch (err) {
@@ -517,8 +525,11 @@ const getStatusBadgeClass = (status: string) => {
       return 'bg-emerald-50 text-emerald-700 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-400 dark:border-emerald-800'
     case 'RESOLVED':
       return 'bg-blue-50 text-blue-700 border-blue-300 dark:bg-blue-950 dark:text-blue-400 dark:border-blue-800'
-    case 'FROZEN':
-      return 'bg-purple-50 text-purple-700 border-purple-300 dark:bg-purple-950 dark:text-purple-400 dark:border-purple-800'
+    case 'RFC':
+      return 'bg-forest-50 text-forest-700 border-forest-300 dark:bg-forest-950 dark:text-forest-400 dark:border-forest-800'
+    case 'UNDER_DISCUSSION':
+      return 'bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-950 dark:text-amber-400 dark:border-amber-800'
+    case 'CLOSED':
     case 'ARCHIVED':
       return 'bg-slate-100 text-slate-600 border-slate-300 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
     default:
@@ -527,13 +538,13 @@ const getStatusBadgeClass = (status: string) => {
 }
 
 const getVoteCount = (rfc: RFCItem, voteType: string) => {
-  if (!rfc?.votes) return 0
-  return Object.values(rfc.votes).filter(v => v === voteType).length
+  if (!rfc || !Array.isArray(rfc.votes)) return 0
+  return rfc.votes.filter(v => v && v.choice === voteType).length
 }
 
 const getRFCVotePct = (rfc: RFCItem, voteType: string) => {
-  if (!rfc?.votes) return 0
-  const total = Object.values(rfc.votes).length
+  if (!rfc || !Array.isArray(rfc.votes)) return 0
+  const total = rfc.votes.length
   if (total === 0) return 0
   const count = getVoteCount(rfc, voteType)
   return Math.round((count / total) * 100)
@@ -549,6 +560,14 @@ const formatTime = (ts: string) => {
     return ts
   }
 }
+
+useSeoMeta({
+  title: () => `Talk: ${displayTitle.value} — Treewiki`,
+  description: () => `Community discussion, RFC proposals, and editorial consensus for ${displayTitle.value} on Treewiki.`,
+  ogTitle: () => `Talk: ${displayTitle.value} — Treewiki`,
+  ogDescription: () => `Join the consensus discussion for ${displayTitle.value}.`,
+  ogType: 'article',
+})
 
 onMounted(() => {
   loadThreads()

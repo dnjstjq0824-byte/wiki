@@ -12,10 +12,22 @@ type WatchEntry struct {
 	CreatedAt   time.Time `json:"created_at"`
 }
 
+// WatchlistStorage abstracts watchlist persistence so the service runs on the
+// in-memory WatchlistStore (development/tests) or PostgresWatchlistStore.
+type WatchlistStorage interface {
+	Add(userID, pageKey string, notifyEmail bool) error
+	Remove(userID, pageKey string) error
+	List(userID string) []*WatchEntry
+	IsWatching(userID, pageKey string) bool
+	Watchers(pageKey string) []string
+}
+
 type WatchlistStore struct {
 	mu      sync.RWMutex
 	entries map[string]*WatchEntry
 }
+
+var _ WatchlistStorage = (*WatchlistStore)(nil)
 
 func NewWatchlistStore() *WatchlistStore {
 	return &WatchlistStore{entries: make(map[string]*WatchEntry)}
@@ -25,7 +37,7 @@ func wlKey(userID, pageKey string) string {
 	return userID + ":" + pageKey
 }
 
-func (s *WatchlistStore) Add(userID, pageKey string, notifyEmail bool) {
+func (s *WatchlistStore) Add(userID, pageKey string, notifyEmail bool) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.entries[wlKey(userID, pageKey)] = &WatchEntry{
@@ -34,12 +46,14 @@ func (s *WatchlistStore) Add(userID, pageKey string, notifyEmail bool) {
 		NotifyEmail: notifyEmail,
 		CreatedAt:   time.Now().UTC(),
 	}
+	return nil
 }
 
-func (s *WatchlistStore) Remove(userID, pageKey string) {
+func (s *WatchlistStore) Remove(userID, pageKey string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	delete(s.entries, wlKey(userID, pageKey))
+	return nil
 }
 
 func (s *WatchlistStore) List(userID string) []*WatchEntry {

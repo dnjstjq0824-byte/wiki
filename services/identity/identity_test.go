@@ -214,4 +214,3 @@ func TestGDPRAnonymization(t *testing.T) {
 		t.Errorf("expected login to fail after account anonymization")
 	}
 }
-

@@ -2,6 +2,7 @@
 -- Treewiki Master Production Database Schema
 -- Version: 1.0.0
 -- Dialect: PostgreSQL 16+
+-- NOTE: every statement is idempotent; the gateway applies this file on boot.
 -- =============================================================================
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -29,8 +30,8 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_users_username_trgm ON users USING gin (username gin_trgm_ops);
-CREATE INDEX idx_users_role ON users (role);
+CREATE INDEX IF NOT EXISTS idx_users_username_trgm ON users USING gin (username gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_users_role ON users (role);
 
 CREATE TABLE IF NOT EXISTS user_sessions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -42,8 +43,8 @@ CREATE TABLE IF NOT EXISTS user_sessions (
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_user_sessions_user_id ON user_sessions (user_id);
-CREATE INDEX idx_user_sessions_expires_at ON user_sessions (expires_at);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions (user_id);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_expires_at ON user_sessions (expires_at);
 
 -- -----------------------------------------------------------------------------
 -- 2. Namespaces & Pages
@@ -95,10 +96,10 @@ CREATE TABLE IF NOT EXISTS pages (
     UNIQUE (namespace_id, title)
 );
 
-CREATE INDEX idx_pages_namespace_slug ON pages (namespace_id, slug);
-CREATE INDEX idx_pages_title_trgm ON pages USING gin (title gin_trgm_ops);
-CREATE INDEX idx_pages_tsv_content ON pages USING gin (tsv_content);
-CREATE INDEX idx_pages_is_deleted ON pages (is_deleted);
+CREATE INDEX IF NOT EXISTS idx_pages_namespace_slug ON pages (namespace_id, slug);
+CREATE INDEX IF NOT EXISTS idx_pages_title_trgm ON pages USING gin (title gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_pages_tsv_content ON pages USING gin (tsv_content);
+CREATE INDEX IF NOT EXISTS idx_pages_is_deleted ON pages (is_deleted);
 
 -- -----------------------------------------------------------------------------
 -- 3. Revisions & Storage
@@ -121,12 +122,17 @@ CREATE TABLE IF NOT EXISTS revisions (
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_revisions_page_id_created ON revisions (page_id, created_at DESC);
-CREATE INDEX idx_revisions_author_id ON revisions (author_id);
-CREATE INDEX idx_revisions_created_at ON revisions (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_revisions_page_id_created ON revisions (page_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_revisions_author_id ON revisions (author_id);
+CREATE INDEX IF NOT EXISTS idx_revisions_created_at ON revisions (created_at DESC);
 
-ALTER TABLE pages ADD CONSTRAINT fk_pages_current_revision
-    FOREIGN KEY (current_revision_id) REFERENCES revisions(id) ON DELETE SET NULL;
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_pages_current_revision') THEN
+        ALTER TABLE pages ADD CONSTRAINT fk_pages_current_revision
+            FOREIGN KEY (current_revision_id) REFERENCES revisions(id) ON DELETE SET NULL;
+    END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS revision_text (
     revision_id UUID PRIMARY KEY REFERENCES revisions(id) ON DELETE CASCADE,
@@ -145,7 +151,7 @@ CREATE TABLE IF NOT EXISTS page_links (
     PRIMARY KEY (from_page_id, to_namespace_id, to_page_title)
 );
 
-CREATE INDEX idx_page_links_target ON page_links (to_namespace_id, to_page_title);
+CREATE INDEX IF NOT EXISTS idx_page_links_target ON page_links (to_namespace_id, to_page_title);
 
 -- -----------------------------------------------------------------------------
 -- 5. Categories & Taxonomy
@@ -165,7 +171,7 @@ CREATE TABLE IF NOT EXISTS page_categories (
     PRIMARY KEY (page_id, category_id)
 );
 
-CREATE INDEX idx_page_categories_cat ON page_categories (category_id);
+CREATE INDEX IF NOT EXISTS idx_page_categories_cat ON page_categories (category_id);
 
 -- -----------------------------------------------------------------------------
 -- 6. Topic Tree & Knowledge Graph DAG
@@ -220,7 +226,7 @@ CREATE TABLE IF NOT EXISTS talk_threads (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_talk_threads_page ON talk_threads (page_id, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_talk_threads_page ON talk_threads (page_id, updated_at DESC);
 
 CREATE TABLE IF NOT EXISTS talk_replies (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -234,7 +240,7 @@ CREATE TABLE IF NOT EXISTS talk_replies (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_talk_replies_thread ON talk_replies (thread_id, created_at ASC);
+CREATE INDEX IF NOT EXISTS idx_talk_replies_thread ON talk_replies (thread_id, created_at ASC);
 
 CREATE TABLE IF NOT EXISTS talk_polls (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -275,7 +281,7 @@ CREATE TABLE IF NOT EXISTS media_assets (
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_media_assets_hash ON media_assets (sha256_hash);
+CREATE INDEX IF NOT EXISTS idx_media_assets_hash ON media_assets (sha256_hash);
 
 -- -----------------------------------------------------------------------------
 -- 9. Moderation, Blocks & Abuse Filters
@@ -292,8 +298,8 @@ CREATE TABLE IF NOT EXISTS blocks (
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_blocks_user ON blocks (target_user_id);
-CREATE INDEX idx_blocks_ip ON blocks (target_ip);
+CREATE INDEX IF NOT EXISTS idx_blocks_user ON blocks (target_user_id);
+CREATE INDEX IF NOT EXISTS idx_blocks_ip ON blocks (target_ip);
 
 CREATE TABLE IF NOT EXISTS abuse_filters (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -341,11 +347,10 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_audit_logs_action ON audit_logs (action_type);
-CREATE INDEX idx_audit_logs_created ON audit_logs (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs (action_type);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs (created_at DESC);
 
 -- Full-text search support (tsvector + pg_trgm)
 ALTER TABLE pages ADD COLUMN IF NOT EXISTS search_vector tsvector;
 CREATE INDEX IF NOT EXISTS idx_pages_search_vector ON pages USING gin (search_vector);
 CREATE INDEX IF NOT EXISTS idx_pages_title_trgm ON pages USING gin (title gin_trgm_ops);
-

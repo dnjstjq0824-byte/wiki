@@ -155,4 +155,3 @@ func TestAnonymization(t *testing.T) {
 		t.Errorf("anonymized account must be blocked")
 	}
 }
-

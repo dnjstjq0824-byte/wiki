@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/dnjstjqppk-dev/treewiki/pkg/validate"
 	"github.com/dnjstjqppk-dev/treewiki/services/identity"
 )
 
@@ -58,7 +59,15 @@ func (h *Handler) CreateThread(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) ListThreads(w http.ResponseWriter, r *http.Request) {
 	pageKey := r.URL.Query().Get("page_key")
-	h.writeJSON(w, http.StatusOK, h.service.ListThreads(pageKey))
+	items := h.service.ListThreads(pageKey)
+	if items == nil {
+		items = []*TalkThread{}
+	}
+	if validate.HasPagination(r) {
+		h.writeJSON(w, http.StatusOK, validate.Paginate(items, validate.ParsePagination(r, 20)))
+		return
+	}
+	h.writeJSON(w, http.StatusOK, items)
 }
 
 func (h *Handler) SetStatus(w http.ResponseWriter, r *http.Request) {
@@ -110,7 +119,15 @@ func (h *Handler) AddComment(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) GetComments(w http.ResponseWriter, r *http.Request) {
 	threadID := r.PathValue("id")
-	h.writeJSON(w, http.StatusOK, h.service.GetComments(threadID))
+	items := h.service.GetComments(threadID)
+	if items == nil {
+		items = []*TalkComment{}
+	}
+	if validate.HasPagination(r) {
+		h.writeJSON(w, http.StatusOK, validate.Paginate(items, validate.ParsePagination(r, 50)))
+		return
+	}
+	h.writeJSON(w, http.StatusOK, items)
 }
 
 func (h *Handler) CreateRFC(w http.ResponseWriter, r *http.Request) {
@@ -139,6 +156,20 @@ func (h *Handler) VoteRFC(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		h.writeErr(w, http.StatusBadRequest, "invalid json")
+		return
+	}
+	if body.UserID == "" {
+		ctx := identity.GetUserContext(r)
+		body.UserID = ctx.Username
+		if body.UserID == "" {
+			body.UserID = ctx.UserID
+		}
+		if body.UserID == "" {
+			body.UserID = ctx.MaskedIP
+		}
+	}
+	if body.UserID == "" {
+		h.writeErr(w, http.StatusBadRequest, "user identity required to vote")
 		return
 	}
 	if err := h.service.VoteRFC(id, body.UserID, body.Choice); err != nil {
@@ -206,7 +237,25 @@ func (h *Handler) ArchiveThread(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ListArchived(w http.ResponseWriter, r *http.Request) {
-	h.writeJSON(w, http.StatusOK, h.service.ListArchived())
+	items := h.service.ListArchived()
+	if items == nil {
+		items = []*TalkThread{}
+	}
+	if validate.HasPagination(r) {
+		h.writeJSON(w, http.StatusOK, validate.Paginate(items, validate.ParsePagination(r, 20)))
+		return
+	}
+	h.writeJSON(w, http.StatusOK, items)
+}
+
+func (h *Handler) GetRFCByThread(w http.ResponseWriter, r *http.Request) {
+	threadID := r.PathValue("id")
+	rfc, err := h.service.GetRFCByThread(threadID)
+	if err != nil {
+		h.writeErr(w, http.StatusNotFound, err.Error())
+		return
+	}
+	h.writeJSON(w, http.StatusOK, rfc)
 }
 
 func (h *Handler) CreateArbitration(w http.ResponseWriter, r *http.Request) {
@@ -227,7 +276,15 @@ func (h *Handler) CreateArbitration(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ListArbitrations(w http.ResponseWriter, r *http.Request) {
-	h.writeJSON(w, http.StatusOK, h.service.ListArbitrations())
+	items := h.service.ListArbitrations()
+	if items == nil {
+		items = []*ArbitrationCase{}
+	}
+	if validate.HasPagination(r) {
+		h.writeJSON(w, http.StatusOK, validate.Paginate(items, validate.ParsePagination(r, 20)))
+		return
+	}
+	h.writeJSON(w, http.StatusOK, items)
 }
 func (h *Handler) PinThread(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -77,3 +79,37 @@ func (db *DB) Migrate(schemaPath string) error {
 	return nil
 }
 
+// migrateLockKey serializes concurrent migrators (parallel tests, replicas)
+// around DDL such as CREATE EXTENSION, whose IF NOT EXISTS still races.
+const migrateLockKey = 72771617
+
+// MigrateAll executes every *.sql file in dir in sorted filename order.
+func (db *DB) MigrateAll(dir string) error {
+	if db == nil || db.Pool == nil {
+		return nil
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return fmt.Errorf("read migrations dir: %w", err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	conn, err := db.Pool.Acquire(ctx)
+	if err != nil {
+		return fmt.Errorf("acquire migrate lock holder: %w", err)
+	}
+	defer conn.Release()
+	if _, err := conn.Exec(ctx, `SELECT pg_advisory_lock($1)`, int64(migrateLockKey)); err != nil {
+		return fmt.Errorf("acquire migrate lock: %w", err)
+	}
+	defer func() { _, _ = conn.Exec(context.Background(), `SELECT pg_advisory_unlock($1)`, int64(migrateLockKey)) }()
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".sql") {
+			continue
+		}
+		if err := db.Migrate(filepath.Join(dir, e.Name())); err != nil {
+			return err
+		}
+	}
+	return nil
+}

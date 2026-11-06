@@ -55,7 +55,11 @@
         <div v-if="loading" class="h-[600px] flex items-center justify-center bg-slate-900 rounded-xl text-slate-400 text-xs">
           <span class="inline-block animate-spin mr-2">⌛</span> Loading hierarchical taxonomy...
         </div>
-        <D3TreeViewer v-else />
+        <div v-else-if="loadError" class="h-[300px] flex flex-col items-center justify-center gap-3 bg-slate-900 rounded-xl text-slate-400 text-xs">
+          <p>{{ loadError }}</p>
+          <button @click="loadTopicData" class="px-4 py-1.5 rounded-lg bg-forest-600 hover:bg-forest-500 text-white font-bold">Retry</button>
+        </div>
+        <D3TreeViewer v-else :root="hierarchyRoot" />
       </div>
 
       <!-- Tab 3: Topic Directory Grid -->
@@ -65,6 +69,15 @@
           <div v-if="loading" class="py-12 text-center text-slate-400 text-xs">
             <span class="inline-block animate-spin text-xl mb-1">⌛</span>
             <p>Loading topic taxonomy...</p>
+          </div>
+
+          <div v-else-if="loadError" class="py-12 text-center text-slate-400 text-xs space-y-3">
+            <p>{{ loadError }}</p>
+            <button @click="loadTopicData" class="px-4 py-1.5 rounded-lg bg-forest-600 hover:bg-forest-500 text-white font-bold">Retry</button>
+          </div>
+
+          <div v-else-if="displayNodes.length === 0" class="py-12 text-center text-slate-400 text-xs">
+            <p>No topic nodes yet. Topics appear here once curators add them.</p>
           </div>
 
           <div
@@ -171,6 +184,7 @@ const api = useApi()
 const router = useRouter()
 
 const loading = ref(true)
+const loadError = ref('')
 const rawNodes = ref<ApiTopicNode[]>([])
 const rawEdges = ref<ApiTopicEdge[]>([])
 
@@ -189,6 +203,7 @@ const getIcon = (id: string) => icons[id.toLowerCase()] || '📄'
 
 const loadTopicData = async () => {
   loading.value = true
+  loadError.value = ''
   try {
     const res = await api.get<ApiGraphExport>('/topics/export')
     if (res && res.nodes) {
@@ -197,6 +212,7 @@ const loadTopicData = async () => {
     }
   } catch (err) {
     console.error('Failed to load topic taxonomy:', err)
+    loadError.value = 'The topic service is unreachable. Check your connection and try again.'
   } finally {
     loading.value = false
     if (displayNodes.value.length > 0 && !selectedNode.value) {
@@ -225,20 +241,6 @@ const graphEdges = computed(() => {
 })
 
 const displayNodes = computed<DirectoryNodeItem[]>(() => {
-  if (rawNodes.value.length === 0) {
-    return [
-      {
-        id: 'cs',
-        title: 'Computer Science',
-        icon: '💻',
-        difficulty: 1,
-        description: 'Study of algorithmic computation, hardware/software systems, and information architectures.',
-        children: ['Algorithms', 'Data Structures'],
-        articles: ['Computer Science'],
-      },
-    ]
-  }
-
   return rawNodes.value.map(n => ({
     id: n.id,
     title: n.name,
@@ -252,12 +254,57 @@ const displayNodes = computed<DirectoryNodeItem[]>(() => {
 
 const selectedNode = ref<DirectoryNodeItem | null>(null)
 
+// Nest the DAG into a display tree (first-parent wins, cycles guarded).
+const hierarchyRoot = computed(() => {
+  if (rawNodes.value.length === 0) return undefined
+  const byId = new Map(rawNodes.value.map(n => [n.id, n]))
+  const childIds = new Set(rawEdges.value.map(e => e.to))
+  const roots = rawNodes.value.filter(n => !childIds.has(n.id))
+  const seeds = roots.length > 0 ? roots : rawNodes.value.slice(0, 1)
+  const build = (id: string, seen: Set<string>): any => {
+    const n = byId.get(id)
+    if (!n) return null
+    if (seen.has(id)) return { id: n.id, name: n.name, icon: getIcon(n.id), description: n.description, difficulty: n.difficulty || 1 }
+    const next = new Set(seen)
+    next.add(id)
+    return {
+      id: n.id,
+      name: n.name,
+      icon: getIcon(n.id),
+      description: n.description || 'Topic in the Treewiki knowledge taxonomy.',
+      difficulty: n.difficulty || 1,
+      children: rawEdges.value
+        .filter(e => e.from === id)
+        .map(e => build(e.to, next))
+        .filter(Boolean),
+    }
+  }
+  const trees = seeds.map(s => build(s.id, new Set()))
+  if (trees.length === 1) return trees[0]
+  return {
+    id: 'root',
+    name: 'Knowledge Graph',
+    icon: '🌲',
+    description: 'Root of the Treewiki topic taxonomy.',
+    difficulty: 1,
+    children: trees,
+  }
+})
+
 const handleGraphSelect = (node: any) => {
   const match = displayNodes.value.find(n => n.id === node.id)
   if (match) {
     selectedNode.value = match
   }
 }
+
+useSeoMeta({
+  title: 'Topic Tree Knowledge Taxonomy — Treewiki',
+  description: 'Explore the Treewiki topic DAG: prerequisite relationships and hierarchies across the knowledge graph.',
+  ogTitle: 'Topic Tree Knowledge Taxonomy — Treewiki',
+  ogDescription: 'A directed acyclic graph of human knowledge: prerequisites, hierarchies, and learning paths.',
+  ogType: 'website',
+})
 
 onMounted(() => {
   loadTopicData()

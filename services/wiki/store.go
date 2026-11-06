@@ -2,6 +2,7 @@ package wiki
 
 import (
 	"errors"
+	"math/rand/v2"
 	"regexp"
 	"strings"
 	"sync"
@@ -20,6 +21,28 @@ var (
 
 var internalLinkRe = regexp.MustCompile(`\[\[([^\]]+)\]\]`)
 
+// PageStorage abstracts page persistence so the wiki service runs on the
+// in-memory PageStore (development/tests) or PostgresPageStore (production).
+type PageStorage interface {
+	Create(page *Page) error
+	Get(ns Namespace, title string) (*Page, error)
+	Update(page *Page) error
+	Delete(ns Namespace, title string) error
+	Undelete(ns Namespace, title string) error
+	Move(oldNS Namespace, oldTitle string, newNS Namespace, newTitle string) error
+	AddRevision(rev *Revision) error
+	GetRevisions(pageID string) []*Revision
+	GetRevision(pageID, revID string) (*Revision, error)
+	RebuildBacklinks(sourceKey string, targets []string) error
+	GetBacklinks(targetKey string) []string
+	RebuildCategories(sourceKey string, cats []string) error
+	GetCategoryMembers(category string) []string
+	ListByNamespace(ns Namespace) []string
+	CountAll() int
+	CountByNamespace(ns Namespace) int
+	Random(ns *Namespace) (*Page, error)
+}
+
 type PageStore struct {
 	mu         sync.RWMutex
 	pages      map[string]*Page
@@ -27,6 +50,8 @@ type PageStore struct {
 	backlinks  map[string]map[string]bool
 	categories map[string]map[string]bool
 }
+
+var _ PageStorage = (*PageStore)(nil)
 
 func NewPageStore() *PageStore {
 	return &PageStore{
@@ -161,7 +186,7 @@ func (s *PageStore) Move(oldNS Namespace, oldTitle string, newNS Namespace, newT
 	return nil
 }
 
-func (s *PageStore) AddRevision(rev *Revision) {
+func (s *PageStore) AddRevision(rev *Revision) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if rev.ID == "" {
@@ -171,6 +196,7 @@ func (s *PageStore) AddRevision(rev *Revision) {
 		rev.CreatedAt = time.Now().UTC()
 	}
 	s.revisions[rev.PageID] = append(s.revisions[rev.PageID], rev)
+	return nil
 }
 
 func (s *PageStore) GetRevisions(pageID string) []*Revision {
@@ -193,7 +219,7 @@ func (s *PageStore) GetRevision(pageID, revID string) (*Revision, error) {
 	return nil, errors.New("revision not found")
 }
 
-func (s *PageStore) RebuildBacklinks(sourceKey string, targets []string) {
+func (s *PageStore) RebuildBacklinks(sourceKey string, targets []string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	for _, sources := range s.backlinks {
@@ -205,6 +231,7 @@ func (s *PageStore) RebuildBacklinks(sourceKey string, targets []string) {
 		}
 		s.backlinks[t][sourceKey] = true
 	}
+	return nil
 }
 
 func (s *PageStore) GetBacklinks(targetKey string) []string {
@@ -217,7 +244,7 @@ func (s *PageStore) GetBacklinks(targetKey string) []string {
 	return out
 }
 
-func (s *PageStore) RebuildCategories(sourceKey string, cats []string) {
+func (s *PageStore) RebuildCategories(sourceKey string, cats []string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	for _, members := range s.categories {
@@ -229,6 +256,7 @@ func (s *PageStore) RebuildCategories(sourceKey string, cats []string) {
 		}
 		s.categories[c][sourceKey] = true
 	}
+	return nil
 }
 
 func (s *PageStore) GetCategoryMembers(category string) []string {
@@ -251,6 +279,53 @@ func (s *PageStore) ListByNamespace(ns Namespace) []string {
 		}
 	}
 	return out
+}
+
+// CountAll returns the number of non-deleted pages across all namespaces.
+func (s *PageStore) CountAll() int {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	n := 0
+	for _, p := range s.pages {
+		if !p.IsDeleted {
+			n++
+		}
+	}
+	return n
+}
+
+// CountByNamespace returns the number of non-deleted pages in one namespace.
+func (s *PageStore) CountByNamespace(ns Namespace) int {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	n := 0
+	for _, p := range s.pages {
+		if p.Namespace == ns && !p.IsDeleted {
+			n++
+		}
+	}
+	return n
+}
+
+// Random returns a random non-deleted page. When ns is nil, all namespaces
+// are eligible; otherwise only that namespace is considered.
+func (s *PageStore) Random(ns *Namespace) (*Page, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	candidates := make([]*Page, 0)
+	for _, p := range s.pages {
+		if p.IsDeleted {
+			continue
+		}
+		if ns != nil && p.Namespace != *ns {
+			continue
+		}
+		candidates = append(candidates, p)
+	}
+	if len(candidates) == 0 {
+		return nil, ErrPageNotFound
+	}
+	return clonePage(candidates[rand.N(len(candidates))]), nil
 }
 
 func ParseInternalLinks(content string) []string {

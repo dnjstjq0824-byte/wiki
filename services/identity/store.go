@@ -18,6 +18,8 @@ type UserStore interface {
 	GetByUsername(username string) (*User, error)
 	GetByEmail(email string) (*User, error)
 	GetByVerificationToken(token string) (*User, error)
+	GetByOAuthLink(provider, providerUserID string) (*User, error)
+	CreateOAuthLink(userID, provider, providerUserID string) error
 	Update(user *User) error
 }
 
@@ -26,6 +28,7 @@ type MemoryUserStore struct {
 	usersByID   map[string]*User
 	usersByName map[string]*User
 	usersByMail map[string]*User
+	oauthLinks  map[string]string
 }
 
 func NewMemoryUserStore() *MemoryUserStore {
@@ -33,7 +36,12 @@ func NewMemoryUserStore() *MemoryUserStore {
 		usersByID:   make(map[string]*User),
 		usersByName: make(map[string]*User),
 		usersByMail: make(map[string]*User),
+		oauthLinks:  make(map[string]string),
 	}
+}
+
+func oauthLinkKey(provider, providerUserID string) string {
+	return provider + "\x00" + providerUserID
 }
 
 func (s *MemoryUserStore) Create(user *User) error {
@@ -101,6 +109,39 @@ func (s *MemoryUserStore) GetByVerificationToken(token string) (*User, error) {
 	}
 	return nil, ErrUserNotFound
 }
+func (s *MemoryUserStore) GetByOAuthLink(provider, providerUserID string) (*User, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	userID, linked := s.oauthLinks[oauthLinkKey(provider, providerUserID)]
+	if !linked {
+		return nil, ErrUserNotFound
+	}
+	user, exists := s.usersByID[userID]
+	if !exists {
+		return nil, ErrUserNotFound
+	}
+	return cloneUser(user), nil
+}
+
+func (s *MemoryUserStore) CreateOAuthLink(userID, provider, providerUserID string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if _, exists := s.usersByID[userID]; !exists {
+		return ErrUserNotFound
+	}
+	key := oauthLinkKey(provider, providerUserID)
+	if owner, linked := s.oauthLinks[key]; linked {
+		if owner == userID {
+			return nil
+		}
+		return ErrOAuthLinkTaken
+	}
+	s.oauthLinks[key] = userID
+	return nil
+}
+
 func (s *MemoryUserStore) Update(user *User) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -136,4 +177,3 @@ func cloneUser(u *User) *User {
 	}
 	return &cp
 }
-

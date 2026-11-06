@@ -5,18 +5,18 @@ import (
 )
 
 type TopicNode struct {
-	ID          string    `json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Difficulty  int       `json:"difficulty"`
-	Completion  float64   `json:"completion"`
+	ID            string    `json:"id"`
+	Name          string    `json:"name"`
+	Description   string    `json:"description"`
+	Difficulty    int       `json:"difficulty"`
+	Completion    float64   `json:"completion"`
 	ParentIDs     []string  `json:"parent_ids"`
 	ChildIDs      []string  `json:"child_ids"`
 	Prerequisites []string  `json:"prerequisites"`
 	Advanced      []string  `json:"advanced"`
 	Related       []string  `json:"related"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }
 
 type TopicEdge struct {
@@ -31,6 +31,6 @@ type LearningPath struct {
 }
 
 type GraphExport struct {
-	Nodes []TopicNode  `json:"nodes"`
-	Edges []TopicEdge  `json:"edges"`
+	Nodes []TopicNode `json:"nodes"`
+	Edges []TopicEdge `json:"edges"`
 }

@@ -3,6 +3,7 @@ package identity
 import (
 	"encoding/json"
 	"net/http"
+	"net/url"
 )
 
 type Handler struct {
@@ -219,7 +220,6 @@ func respondJSON(w http.ResponseWriter, status int, data interface{}) {
 	_ = json.NewEncoder(w).Encode(data)
 }
 
-
 func (h *Handler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Token string `json:"token"`
@@ -233,6 +233,84 @@ func (h *Handler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	respondJSON(w, http.StatusOK, map[string]string{"status": "Email verified successfully"})
+}
+
+func (h *Handler) OAuthProviders(w http.ResponseWriter, r *http.Request) {
+	respondJSON(w, http.StatusOK, map[string]interface{}{
+		"providers": h.service.OAuthProviders(),
+	})
+}
+
+func (h *Handler) OAuthLogin(w http.ResponseWriter, r *http.Request) {
+	provider := r.PathValue("provider")
+	authURL, err := h.service.BeginOAuthLogin(provider)
+	if err != nil {
+		status := http.StatusBadRequest
+		if err == ErrOAuthProviderUnknown {
+			status = http.StatusNotFound
+		}
+		respondJSON(w, status, map[string]string{"error": err.Error()})
+		return
+	}
+	http.Redirect(w, r, authURL, http.StatusFound)
+}
+
+func (h *Handler) OAuthCallback(w http.ResponseWriter, r *http.Request) {
+	provider := r.PathValue("provider")
+	q := r.URL.Query()
+	jsonMode := q.Get("format") == "json"
+
+	fail := func(err error) {
+		if jsonMode {
+			status := http.StatusBadRequest
+			if err == ErrOAuthProviderUnknown {
+				status = http.StatusNotFound
+			}
+			respondJSON(w, status, map[string]string{"error": err.Error()})
+			return
+		}
+		target := h.service.OAuthFrontendURL() + "/auth/callback?provider=" + url.QueryEscape(provider) + "&error=" + url.QueryEscape(err.Error())
+		http.Redirect(w, r, target, http.StatusFound)
+	}
+
+	if providerErr := q.Get("error"); providerErr != "" {
+		fail(ErrOAuthExchange)
+		return
+	}
+	code, err := h.service.CompleteOAuthLogin(provider, q.Get("code"), q.Get("state"))
+	if err != nil {
+		fail(err)
+		return
+	}
+	if jsonMode {
+		respondJSON(w, http.StatusOK, map[string]string{"provider": provider, "code": code})
+		return
+	}
+	target := h.service.OAuthFrontendURL() + "/auth/callback?provider=" + url.QueryEscape(provider) + "&code=" + url.QueryEscape(code)
+	http.Redirect(w, r, target, http.StatusFound)
+}
+
+func (h *Handler) OAuthConsume(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		Code string `json:"code"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.Code == "" {
+		respondJSON(w, http.StatusBadRequest, map[string]string{"error": "OAuth code is required"})
+		return
+	}
+
+	res, err := h.service.ConsumeOAuthCode(body.Code)
+	if err != nil {
+		status := http.StatusUnauthorized
+		if err == ErrAccountBlocked {
+			status = http.StatusForbidden
+		}
+		respondJSON(w, status, map[string]string{"error": err.Error()})
+		return
+	}
+
+	setSessionCookie(w, res.AccessToken)
+	respondJSON(w, http.StatusOK, res)
 }
 
 func (h *Handler) ResendEmailVerification(w http.ResponseWriter, r *http.Request) {

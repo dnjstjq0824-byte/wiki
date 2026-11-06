@@ -1,9 +1,10 @@
 package parser
 
 import "strings"
+
 // Token represents a lexical token from wikitext
 type Token struct {
-	Type  string `json:"type"`  // text, tag, link, heading, template, ref, table, newline
+	Type  string `json:"type"` // text, tag, link, heading, template, ref, table, newline
 	Value string `json:"value"`
 }
 

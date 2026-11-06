@@ -107,4 +107,3 @@ func ValidateUsername(username string) bool {
 	matched, _ := regexp.MatchString(`^[a-zA-Z0-9_\-\.]{3,32}$`, username)
 	return matched
 }
-

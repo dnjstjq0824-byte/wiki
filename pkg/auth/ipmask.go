@@ -32,4 +32,3 @@ func MaskIP(ipStr string) string {
 	network := parsed.Mask(mask)
 	return network.String() + "/64"
 }
-

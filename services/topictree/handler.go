@@ -3,6 +3,8 @@ package topictree
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/dnjstjqppk-dev/treewiki/pkg/validate"
 )
 
 type Handler struct {
@@ -136,11 +138,27 @@ func (h *Handler) GetPath(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ListPaths(w http.ResponseWriter, r *http.Request) {
-	h.writeJSON(w, http.StatusOK, h.service.AllPaths())
+	items := h.service.AllPaths()
+	if items == nil {
+		items = []*LearningPath{}
+	}
+	if validate.HasPagination(r) {
+		h.writeJSON(w, http.StatusOK, validate.Paginate(items, validate.ParsePagination(r, 50)))
+		return
+	}
+	h.writeJSON(w, http.StatusOK, items)
 }
 
 func (h *Handler) ListNodes(w http.ResponseWriter, r *http.Request) {
-	h.writeJSON(w, http.StatusOK, h.service.AllNodes())
+	items := h.service.AllNodes()
+	if items == nil {
+		items = []*TopicNode{}
+	}
+	if validate.HasPagination(r) {
+		h.writeJSON(w, http.StatusOK, validate.Paginate(items, validate.ParsePagination(r, 50)))
+		return
+	}
+	h.writeJSON(w, http.StatusOK, items)
 }
 
 func (h *Handler) Export(w http.ResponseWriter, r *http.Request) {

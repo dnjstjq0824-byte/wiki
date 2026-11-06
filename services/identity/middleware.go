@@ -116,4 +116,3 @@ func RequireRole(requiredRole string, next http.HandlerFunc) http.HandlerFunc {
 		next(w, r)
 	}
 }
-

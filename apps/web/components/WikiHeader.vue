@@ -10,27 +10,38 @@
 
       <!-- Search Bar with Live Autocomplete -->
       <div class="flex-1 max-w-lg relative" ref="searchContainerRef">
-        <div class="relative flex items-center">
+        <div class="relative flex items-center" role="search">
+          <label for="site-search" class="sr-only">Search Treewiki</label>
           <input
+            id="site-search"
             v-model="searchQuery"
             @input="onSearchInput"
             @keyup.enter="handleSearch"
             @focus="showSuggestions = true"
             type="text"
+            role="combobox"
+            :aria-expanded="showSuggestions && suggestions.length > 0"
+            aria-controls="search-suggestions"
+            aria-autocomplete="list"
             placeholder="Search Treewiki or enter title... (Press Enter)"
             class="w-full pl-9 pr-4 py-1.5 text-sm rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-forest-500 transition"
           />
-          <span class="absolute left-2.5 text-slate-400 text-xs">🔍</span>
+          <span class="absolute left-2.5 text-slate-400 text-xs" aria-hidden="true">🔍</span>
         </div>
 
         <!-- Autocomplete Dropdown Menu -->
         <div
           v-if="showSuggestions && suggestions.length > 0"
+          id="search-suggestions"
+          role="listbox"
+          aria-label="Search suggestions"
           class="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl overflow-hidden z-50 text-xs"
         >
           <div
             v-for="(item, idx) in suggestions"
             :key="idx"
+            role="option"
+            :aria-selected="false"
             @click="selectSuggestion(item)"
             class="px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-800/80 cursor-pointer flex items-center justify-between transition"
           >
@@ -43,7 +54,7 @@
       </div>
 
       <!-- Action Navigation & Auth Controls -->
-      <nav class="flex items-center gap-2">
+      <nav aria-label="Primary" class="flex items-center gap-2">
         <NuxtLink to="/tree" class="px-3 py-1.5 text-xs font-semibold rounded-md text-forest-700 dark:text-forest-400 hover:bg-forest-50 dark:hover:bg-slate-800 transition">
           🌲 Topic Trees
         </NuxtLink>
@@ -54,6 +65,8 @@
         <!-- Dark/Light Theme Toggle -->
         <button
           @click="toggleTheme"
+          :aria-pressed="isDark"
+          aria-label="Toggle dark mode"
           class="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
           title="Toggle Dark Mode"
         >

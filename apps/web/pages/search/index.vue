@@ -259,6 +259,13 @@ const formatSnippet = (raw: string) => {
   return clean
 }
 
+useSeoMeta({
+  title: 'Search — Treewiki',
+  description: 'Full-text faceted search across Treewiki articles, topics, and revisions.',
+  ogTitle: 'Search — Treewiki',
+  ogType: 'website',
+})
+
 onMounted(() => {
   if (route.query.q) {
     query.value = String(route.query.q)

@@ -15,11 +15,31 @@ var (
 	ErrPathNotFound  = errors.New("learning path not found")
 )
 
+// TopicStorage abstracts topic persistence so the service runs on the
+// in-memory TopicStore (development/tests) or PostgresTopicStore (production).
+type TopicStorage interface {
+	CreateNode(n *TopicNode) error
+	GetNode(id string) (*TopicNode, error)
+	UpdateNode(n *TopicNode) error
+	DeleteNode(id string) error
+	AllNodes() []*TopicNode
+	AddEdge(parentID, childID string) error
+	RemoveEdge(parentID, childID string) error
+	CreatePath(p *LearningPath) error
+	GetPath(id string) (*LearningPath, error)
+	AllPaths() []*LearningPath
+	GetDescendants(id string) []string
+	GetAncestors(id string) []string
+	ExportGraph() GraphExport
+}
+
 type TopicStore struct {
 	mu    sync.RWMutex
 	nodes map[string]*TopicNode
 	paths map[string]*LearningPath
 }
+
+var _ TopicStorage = (*TopicStore)(nil)
 
 func NewTopicStore() *TopicStore {
 	return &TopicStore{nodes: make(map[string]*TopicNode), paths: make(map[string]*LearningPath)}

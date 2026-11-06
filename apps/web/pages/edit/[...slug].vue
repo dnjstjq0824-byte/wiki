@@ -155,6 +155,12 @@ const handleSave = async () => {
   }
 }
 
+useSeoMeta({
+  title: () => `Editing ${displayTitle.value} — Treewiki`,
+  description: 'Wikitext and Markdown article editor with live preview and conflict resolution.',
+  robots: 'noindex',
+})
+
 onMounted(() => {
   fetchInitialContent()
 })

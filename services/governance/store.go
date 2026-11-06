@@ -10,12 +10,12 @@ import (
 )
 
 type AbuseFilter struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Pattern     string `json:"pattern"`
-	Action      string `json:"action"` // TAG, WARN, DISALLOW, BLOCK
-	IsEnabled   bool   `json:"is_enabled"`
-	compiled    *regexp.Regexp
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Pattern   string `json:"pattern"`
+	Action    string `json:"action"` // TAG, WARN, DISALLOW, BLOCK
+	IsEnabled bool   `json:"is_enabled"`
+	compiled  *regexp.Regexp
 }
 
 type AbuseFilterLog struct {
@@ -31,13 +31,13 @@ type AbuseFilterLog struct {
 
 type Block struct {
 	ID           string     `json:"id"`
-	TargetUserID  string     `json:"target_user_id,omitempty"`
-	TargetIP      string     `json:"target_ip,omitempty"`
-	BlockedBy     string     `json:"blocked_by"`
-	Reason        string     `json:"reason"`
-	ExpiresAt     *time.Time `json:"expires_at,omitempty"`
-	IsSitewide    bool       `json:"is_sitewide"`
-	CreatedAt     time.Time  `json:"created_at"`
+	TargetUserID string     `json:"target_user_id,omitempty"`
+	TargetIP     string     `json:"target_ip,omitempty"`
+	BlockedBy    string     `json:"blocked_by"`
+	Reason       string     `json:"reason"`
+	ExpiresAt    *time.Time `json:"expires_at,omitempty"`
+	IsSitewide   bool       `json:"is_sitewide"`
+	CreatedAt    time.Time  `json:"created_at"`
 }
 
 type OversightLog struct {
@@ -58,6 +58,27 @@ type TakedownRequest struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+// GovernanceStorage abstracts moderation persistence so the service runs on the
+// in-memory GovernanceStore (development/tests) or PostgresGovernanceStore.
+// The recent-changes feed and subscriptions stay process-local in both: the
+// durable history is the revision ledger, the feed is a live window.
+type GovernanceStorage interface {
+	AddFilter(f *AbuseFilter) error
+	ListFilters() []*AbuseFilter
+	Evaluate(text, pageTitle, userID, ip string) (string, *AbuseFilter)
+	AddBlock(b *Block) error
+	IsBlocked(userID, ip string) bool
+	ListBlocks() []*Block
+	AddOversight(o *OversightLog) error
+	ListOversight() []OversightLog
+	RecordRecentChange(desc string)
+	RecentChanges() []string
+	AddTakedown(t *TakedownRequest) error
+	ListTakedowns() []*TakedownRequest
+	UpdateTakedownStatus(id, status string) error
+	Subscribe() chan string
+}
+
 type GovernanceStore struct {
 	mu         sync.RWMutex
 	filters    map[string]*AbuseFilter
@@ -68,6 +89,8 @@ type GovernanceStore struct {
 	takedowns  map[string]*TakedownRequest
 	subs       []chan string
 }
+
+var _ GovernanceStorage = (*GovernanceStore)(nil)
 
 func NewGovernanceStore() *GovernanceStore {
 	return &GovernanceStore{
@@ -176,7 +199,7 @@ func (s *GovernanceStore) ListBlocks() []*Block {
 	return out
 }
 
-func (s *GovernanceStore) AddOversight(o *OversightLog) {
+func (s *GovernanceStore) AddOversight(o *OversightLog) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if o.ID == "" {
@@ -184,6 +207,7 @@ func (s *GovernanceStore) AddOversight(o *OversightLog) {
 	}
 	o.CreatedAt = time.Now().UTC()
 	s.oversight = append(s.oversight, *o)
+	return nil
 }
 
 func (s *GovernanceStore) ListOversight() []OversightLog {

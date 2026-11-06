@@ -1,10 +1,10 @@
 package governance
 
 type GovernanceService struct {
-	store *GovernanceStore
+	store GovernanceStorage
 }
 
-func NewGovernanceService(store *GovernanceStore) *GovernanceService {
+func NewGovernanceService(store GovernanceStorage) *GovernanceService {
 	return &GovernanceService{store: store}
 }
 
@@ -32,8 +32,8 @@ func (s *GovernanceService) ListBlocks() []*Block {
 	return s.store.ListBlocks()
 }
 
-func (s *GovernanceService) AddOversight(o *OversightLog) {
-	s.store.AddOversight(o)
+func (s *GovernanceService) AddOversight(o *OversightLog) error {
+	return s.store.AddOversight(o)
 }
 
 func (s *GovernanceService) ListOversight() []OversightLog {

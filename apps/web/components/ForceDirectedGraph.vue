@@ -23,6 +23,15 @@
       />
     </div>
 
+    <!-- Empty State -->
+    <div
+      v-if="simNodes.length === 0"
+      class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 text-slate-400 text-xs"
+    >
+      <span class="text-2xl">🕸️</span>
+      <p>No topic nodes to visualize yet.</p>
+    </div>
+
     <!-- Interactive SVG Canvas -->
     <svg
       ref="svgRef"
@@ -108,7 +117,6 @@
         <button @click="selectedNode = null" class="text-slate-400 hover:text-slate-200 text-xs">✕</button>
       </div>
       <p class="text-xs text-slate-300 leading-relaxed mb-3">
-        {{ selectedNode.description || 'Topic node connected within the knowledge graph.' }}
       </p>
       <div class="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-700/60">
         <span>Connections: {{ getDegree(selectedNode.id) }} edges</span>
@@ -158,26 +166,8 @@ const props = withDefaults(
     edges?: GraphEdge[]
   }>(),
   {
-    nodes: () => [
-      { id: 'cs', name: 'Computer Science', group: 1, difficulty: 1, description: 'The study of computation, information, and automation.' },
-      { id: 'algo', name: 'Algorithms', group: 1, difficulty: 2, description: 'Finite sequences of rigorous instructions.' },
-      { id: 'ds', name: 'Data Structures', group: 1, difficulty: 2, description: 'Data organization, management, and storage formats.' },
-      { id: 'quantum', name: 'Quantum Computing', group: 2, difficulty: 4, description: 'Computation harnessing quantum mechanics (quantum bits, entanglement).' },
-      { id: 'physics', name: 'Quantum Physics', group: 2, difficulty: 3, description: 'Fundamental physics branch describing nature at atomic scales.' },
-      { id: 'crypto', name: 'Cryptography', group: 1, difficulty: 3, description: 'Practice and study of secure communication techniques.' },
-      { id: 'math', name: 'Mathematics', group: 3, difficulty: 1, description: 'The science of structure, order, and relations.' },
-      { id: 'linear_algebra', name: 'Linear Algebra', group: 3, difficulty: 2, description: 'Branch concerning linear equations and matrices.' },
-    ],
-    edges: () => [
-      { source: 'cs', target: 'algo' },
-      { source: 'cs', target: 'ds' },
-      { source: 'cs', target: 'crypto' },
-      { source: 'algo', target: 'quantum' },
-      { source: 'physics', target: 'quantum' },
-      { source: 'math', target: 'cs' },
-      { source: 'math', target: 'linear_algebra' },
-      { source: 'linear_algebra', target: 'quantum' },
-    ],
+    nodes: () => [],
+    edges: () => [],
   }
 )
 

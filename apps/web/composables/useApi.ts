@@ -1,7 +1,11 @@
 // apps/web/composables/useApi.ts
 export const useApi = () => {
   const config = useRuntimeConfig()
-  const baseURL = config.public?.apiBase || 'http://localhost:8080/api/v1'
+  // Server-side rendering uses the internal service URL (container DNS);
+  // browsers use the public URL. Both default to local development.
+  const baseURL = import.meta.server
+    ? (config.apiBaseInternal as string | undefined) || config.public?.apiBase || 'http://localhost:8080/api/v1'
+    : config.public?.apiBase || 'http://localhost:8080/api/v1'
 
   const request = async <T = any>(
     endpoint: string,

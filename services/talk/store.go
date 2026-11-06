@@ -11,10 +11,10 @@ import (
 type TalkStatus string
 
 const (
-	StatusOpen      TalkStatus = "OPEN"
-	StatusRFC       TalkStatus = "RFC"
-	StatusClosed    TalkStatus = "CLOSED"
-	StatusResolved  TalkStatus = "RESOLVED"
+	StatusOpen     TalkStatus = "OPEN"
+	StatusRFC      TalkStatus = "RFC"
+	StatusClosed   TalkStatus = "CLOSED"
+	StatusResolved TalkStatus = "RESOLVED"
 )
 
 type TalkThread struct {
@@ -45,13 +45,13 @@ type RFCVote struct {
 }
 
 type RFCPoll struct {
-	ID        string     `json:"id"`
-	ThreadID  string     `json:"thread_id"`
-	Question  string     `json:"question"`
-	Votes     []RFCVote  `json:"votes"`
-	Quorum    int        `json:"quorum"`
-	Closed    bool       `json:"closed"`
-	CreatedAt time.Time  `json:"created_at"`
+	ID        string    `json:"id"`
+	ThreadID  string    `json:"thread_id"`
+	Question  string    `json:"question"`
+	Votes     []RFCVote `json:"votes"`
+	Quorum    int       `json:"quorum"`
+	Closed    bool      `json:"closed"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type ArbitrationCase struct {
@@ -62,15 +62,43 @@ type ArbitrationCase struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-type TalkStore struct {
-	mu       sync.RWMutex
-	threads  map[string]*TalkThread
-	comments map[string][]*TalkComment // threadID
-	rfcs     map[string]*RFCPoll
-	subs            map[string][]chan string // pageKey -> SSE channels
-	ArchivedThreads  map[string]*TalkThread
-	Arbitrations     map[string]*ArbitrationCase
+// TalkStorage abstracts discussion persistence so the talk service runs on the
+// in-memory TalkStore (development/tests) or PostgresTalkStore (production).
+// Realtime fan-out (Subscribe/Unsubscribe/Broadcast) is process-local in both.
+type TalkStorage interface {
+	CreateThread(t *TalkThread) error
+	GetThread(id string) (*TalkThread, error)
+	ListThreads(pageKey string) []*TalkThread
+	UpdateThreadStatus(id string, status TalkStatus) error
+	AddComment(c *TalkComment) error
+	GetComments(threadID string) []*TalkComment
+	CreateRFC(r *RFCPoll) error
+	GetRFC(id string) (*RFCPoll, error)
+	GetRFCByThread(threadID string) (*RFCPoll, error)
+	VoteRFC(id string, vote RFCVote) error
+	CloseRFC(id string) error
+	Subscribe(pageKey string) chan string
+	Unsubscribe(pageKey string, ch chan string)
+	Broadcast(pageKey, msg string)
+	PinThread(id string, pinned bool) error
+	LockThread(id string, locked bool) error
+	ArchiveThread(id string) error
+	ListArchived() []*TalkThread
+	CreateArbitration(a *ArbitrationCase) error
+	ListArbitrations() []*ArbitrationCase
 }
+
+type TalkStore struct {
+	mu              sync.RWMutex
+	threads         map[string]*TalkThread
+	comments        map[string][]*TalkComment // threadID
+	rfcs            map[string]*RFCPoll
+	subs            map[string][]chan string // pageKey -> SSE channels
+	ArchivedThreads map[string]*TalkThread
+	Arbitrations    map[string]*ArbitrationCase
+}
+
+var _ TalkStorage = (*TalkStore)(nil)
 
 func NewTalkStore() *TalkStore {
 	return &TalkStore{
@@ -78,8 +106,8 @@ func NewTalkStore() *TalkStore {
 		comments:        make(map[string][]*TalkComment),
 		rfcs:            make(map[string]*RFCPoll),
 		subs:            make(map[string][]chan string),
-		ArchivedThreads:  make(map[string]*TalkThread),
-		Arbitrations:     make(map[string]*ArbitrationCase),
+		ArchivedThreads: make(map[string]*TalkThread),
+		Arbitrations:    make(map[string]*ArbitrationCase),
 	}
 }
 
@@ -202,6 +230,19 @@ func (s *TalkStore) VoteRFC(id string, vote RFCVote) error {
 	}
 	r.Votes = append(r.Votes, vote)
 	return nil
+}
+
+func (s *TalkStore) GetRFCByThread(threadID string) (*RFCPoll, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	for _, r := range s.rfcs {
+		if r.ThreadID == threadID {
+			cp := *r
+			cp.Votes = append([]RFCVote{}, r.Votes...)
+			return &cp, nil
+		}
+	}
+	return nil, fmt.Errorf("no rfc attached to thread")
 }
 
 func (s *TalkStore) CloseRFC(id string) error {

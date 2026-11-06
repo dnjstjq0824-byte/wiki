@@ -8,13 +8,13 @@ import (
 )
 
 type Config struct {
-	Port        string `mapstructure:"PORT"`
-	JWTSecret   string `mapstructure:"JWT_SECRET"`
-	DatabaseURL string `mapstructure:"DATABASE_URL"`
-	RedisURL    string `mapstructure:"REDIS_URL"`
+	Port          string `mapstructure:"PORT"`
+	JWTSecret     string `mapstructure:"JWT_SECRET"`
+	DatabaseURL   string `mapstructure:"DATABASE_URL"`
+	RedisURL      string `mapstructure:"REDIS_URL"`
 	MinIOEndpoint string `mapstructure:"MINIO_ENDPOINT"`
-	MeiliURL    string `mapstructure:"MEILISEARCH_URL"`
-	Environment string `mapstructure:"ENV"`
+	MeiliURL      string `mapstructure:"MEILISEARCH_URL"`
+	Environment   string `mapstructure:"ENV"`
 }
 
 func Load() (*Config, error) {

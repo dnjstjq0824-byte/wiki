@@ -86,4 +86,3 @@ func TestImageScrubAndThumbnail(t *testing.T) {
 		t.Errorf("thumbnail PNG is empty")
 	}
 }
-
