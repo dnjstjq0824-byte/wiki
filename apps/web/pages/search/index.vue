@@ -1,166 +1,100 @@
 <!-- apps/web/pages/search/index.vue -->
 <template>
-  <div class="space-y-6 max-w-5xl mx-auto">
-    <!-- Search Query Bar & Filters Card -->
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm space-y-4">
-      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-          <span>🔎</span> Encyclopedic Search
-        </h1>
-        <span class="text-xs text-slate-400">Trigram & Faceted Full-Text Engine</span>
-      </div>
+  <div>
+    <h1 class="font-wiki text-3xl text-slate-900 dark:text-slate-100 border-b border-wiki-border dark:border-slate-700 pb-1">
+      Search
+    </h1>
 
-      <!-- Main Search Input -->
-      <form @submit.prevent="performSearch" class="flex gap-2">
-        <div class="relative flex-1">
-          <input
-            v-model="query"
-            type="text"
-            placeholder="Search articles, algorithms, topics, or wikitext..."
-            class="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-forest-500 transition"
-          />
-          <span class="absolute left-3.5 top-3 text-slate-400 text-sm">🔍</span>
-          <button
-            v-if="query"
-            type="button"
-            @click="query = ''; performSearch()"
-            class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm"
-          >
-            ✕
-          </button>
-        </div>
+    <form @submit.prevent="performSearch" class="mt-3 flex gap-0 max-w-2xl" role="search">
+      <label for="search-input" class="sr-only">Search query</label>
+      <input
+        id="search-input"
+        v-model="query"
+        type="text"
+        placeholder="Search articles, algorithms, topics, or wikitext..."
+        class="flex-1 px-2.5 py-1.5 text-sm border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-wiki-link"
+      />
+      <button
+        type="submit"
+        class="px-4 text-sm border border-l-0 border-wiki-border dark:border-slate-700 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700"
+      >
+        Search
+      </button>
+    </form>
 
-        <button
-          type="submit"
-          class="px-5 py-2.5 rounded-lg bg-forest-600 hover:bg-forest-500 text-white font-bold text-sm shadow-xs transition flex items-center gap-1.5"
-        >
-          <span>Search</span>
-        </button>
-      </form>
-
-      <!-- Namespace Filter Chips -->
-      <div class="flex flex-wrap items-center gap-2 text-xs pt-1">
-        <span class="font-semibold text-slate-500 dark:text-slate-400">Namespace:</span>
-        <button
-          v-for="ns in namespaces"
-          :key="ns.id"
-          type="button"
-          @click="selectNamespace(ns.id)"
-          :class="selectedNs === ns.id ? 'bg-forest-600 text-white font-bold' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'"
-          class="px-2.5 py-1 rounded-md transition font-medium"
-        >
-          {{ ns.name }}
-        </button>
-      </div>
+    <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px]">
+      <span class="text-slate-500">Namespace:</span>
+      <button
+        v-for="ns in namespaces"
+        :key="ns.id"
+        type="button"
+        @click="selectNamespace(ns.id)"
+        :class="selectedNs === ns.id ? 'font-bold text-slate-900 dark:text-slate-100 underline' : 'text-wiki-link dark:text-sky-400 hover:underline'"
+      >
+        {{ ns.name }}
+      </button>
     </div>
 
-    <!-- Search Results Status & Content -->
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm min-h-[300px]">
-      <!-- Loading State -->
-      <div v-if="loading" class="py-16 text-center text-slate-400 space-y-2">
-        <div class="inline-block animate-spin text-3xl">⌛</div>
-        <p class="text-xs">Searching Treewiki knowledge index...</p>
-      </div>
+    <hr class="my-4 border-wiki-border dark:border-slate-700" />
 
-      <!-- Initial Prompt (No Query Entered) -->
-      <div v-else-if="!query.trim()" class="py-16 text-center text-slate-400 space-y-3">
-        <span class="text-4xl block">📚</span>
-        <p class="text-sm font-semibold text-slate-600 dark:text-slate-300">Enter a keyword or title above to begin searching.</p>
-        <p class="text-xs text-slate-400">Popular searches:
-          <button @click="quickSearch('Treewiki')" class="text-forest-600 dark:text-forest-400 underline mx-1">Treewiki</button>,
-          <button @click="quickSearch('Computer Science')" class="text-forest-600 dark:text-forest-400 underline mx-1">Computer Science</button>,
-          <button @click="quickSearch('Algorithms')" class="text-forest-600 dark:text-forest-400 underline mx-1">Algorithms</button>,
-          <button @click="quickSearch('Myers Diff')" class="text-forest-600 dark:text-forest-400 underline mx-1">Myers Diff</button>
-        </p>
-      </div>
+    <!-- Loading State -->
+    <div v-if="loading" class="py-10 text-center text-sm text-slate-500">
+      <p>Searching the knowledge index…</p>
+    </div>
 
-      <!-- No Results Found State (with Red Link direct creation button) -->
-      <div v-else-if="results.length === 0" class="py-12 px-6 text-center space-y-5">
-        <div class="inline-flex p-4 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 text-3xl">
-          🔍
-        </div>
-        <div class="space-y-1">
-          <h2 class="text-lg font-bold text-slate-800 dark:text-slate-200">
-            No matching documents found for <span class="text-rose-600 dark:text-rose-400">"{{ query }}"</span>
-          </h2>
-          <p class="text-xs text-slate-500 max-w-md mx-auto">
-            There is currently no page with this title or content in the selected namespace.
+    <!-- Initial Prompt -->
+    <div v-else-if="!query.trim()" class="text-sm text-slate-600 dark:text-slate-300">
+      <p>Enter a keyword or title above to begin searching.</p>
+      <p class="mt-2 text-slate-500">
+        Popular:
+        <button @click="quickSearch('Treewiki')" class="text-wiki-link dark:text-sky-400 hover:underline">Treewiki</button> ·
+        <button @click="quickSearch('Computer Science')" class="text-wiki-link dark:text-sky-400 hover:underline">Computer Science</button> ·
+        <button @click="quickSearch('Algorithms')" class="text-wiki-link dark:text-sky-400 hover:underline">Algorithms</button> ·
+        <button @click="quickSearch('Myers Diff')" class="text-wiki-link dark:text-sky-400 hover:underline">Myers Diff</button>
+      </p>
+    </div>
+
+    <!-- No Results -->
+    <div v-else-if="results.length === 0" class="text-sm">
+      <h2 class="font-wiki text-xl text-slate-900 dark:text-slate-100">No results for “{{ query }}”</h2>
+      <p class="text-slate-600 dark:text-slate-400 mt-1">There is no page with this title or content in the selected namespace.</p>
+      <p class="mt-3">
+        <NuxtLink
+          :to="`/edit/${encodeURIComponent(query.trim().replace(/ /g, '_'))}`"
+          class="text-wiki-redlink hover:underline font-semibold"
+        >
+          Create the page “{{ query.trim() }}”
+        </NuxtLink>
+      </p>
+    </div>
+
+    <!-- Results List -->
+    <div v-else>
+      <p class="text-sm text-slate-500">{{ results.length }} result(s) found, sorted by relevance.</p>
+      <ul class="mt-2 space-y-4">
+        <li v-for="(item, idx) in results" :key="idx">
+          <p class="text-lg">
+            <NuxtLink
+              :to="`/w/${encodeURIComponent(item.document.title.replace(/ /g, '_'))}`"
+              class="text-wiki-link dark:text-sky-400 hover:underline"
+            >
+              {{ item.document.title.replace(/_/g, ' ') }}
+            </NuxtLink>
+            <span class="ml-2 text-xs font-mono text-slate-400">{{ getNamespaceLabel(item.document.namespace) }}</span>
           </p>
-        </div>
-
-        <div class="pt-2">
-          <NuxtLink
-            :to="`/edit/${encodeURIComponent(query.trim().replace(/ /g, '_'))}`"
-            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-forest-600 hover:bg-forest-500 text-white font-bold text-xs shadow-sm transition"
-          >
-            <span>✏️</span> Create "{{ query.trim() }}" on Treewiki
-          </NuxtLink>
-        </div>
-      </div>
-
-      <!-- Results List -->
-      <div v-else class="space-y-4">
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 text-xs text-slate-500">
-          <span>Found <strong class="text-slate-800 dark:text-slate-200">{{ results.length }}</strong> matching documents</span>
-          <span>Sorted by BM25 relevance & trigram match</span>
-        </div>
-
-        <div class="divide-y divide-slate-100 dark:divide-slate-800">
-          <div
-            v-for="(item, idx) in results"
-            :key="idx"
-            class="py-4 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 px-3 rounded-lg transition space-y-1.5"
-          >
-            <!-- Title, Namespace Badge & Relevance Score -->
-            <div class="flex items-center justify-between gap-3">
-              <NuxtLink
-                :to="`/w/${encodeURIComponent(item.document.title.replace(/ /g, '_'))}`"
-                class="text-base font-bold text-forest-700 dark:text-forest-400 hover:underline flex items-center gap-2"
-              >
-                <span>📄</span>
-                <span>{{ item.document.title.replace(/_/g, ' ') }}</span>
-              </NuxtLink>
-
-              <div class="flex items-center gap-2">
-                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                  {{ getNamespaceLabel(item.document.namespace) }}
-                </span>
-                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-forest-50 dark:bg-forest-950 text-forest-700 dark:text-forest-400 font-semibold">
-                  Score {{ item.score.toFixed(1) }}
-                </span>
-              </div>
-            </div>
-
-            <!-- Snippet with Highlight -->
-            <p
-              class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-sans line-clamp-3"
-              v-html="formatSnippet(item.snippet || item.document.content)"
-            ></p>
-
-            <!-- Bottom metadata -->
-            <div class="flex items-center gap-4 text-[11px] text-slate-400 pt-1">
-              <NuxtLink
-                :to="`/history/${encodeURIComponent(item.document.title.replace(/ /g, '_'))}`"
-                class="hover:text-slate-600 dark:hover:text-slate-300 underline"
-              >
-                View History
-              </NuxtLink>
-              <NuxtLink
-                :to="`/talk/${encodeURIComponent(item.document.title.replace(/ /g, '_'))}`"
-                class="hover:text-slate-600 dark:hover:text-slate-300 underline"
-              >
-                Discussion Talk
-              </NuxtLink>
-              <NuxtLink
-                :to="`/edit/${encodeURIComponent(item.document.title.replace(/ /g, '_'))}`"
-                class="hover:text-slate-600 dark:hover:text-slate-300 underline"
-              >
-                Edit Page
-              </NuxtLink>
-            </div>
-          </div>
-        </div>
-      </div>
+          <p
+            class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed"
+            v-html="formatSnippet(item.snippet || item.document.content)"
+          ></p>
+          <p class="text-[13px] text-slate-500">
+            <NuxtLink :to="`/history/${encodeURIComponent(item.document.title.replace(/ /g, '_'))}`" class="text-wiki-link dark:text-sky-400 hover:underline">history</NuxtLink>
+            ·
+            <NuxtLink :to="`/talk/${encodeURIComponent(item.document.title.replace(/ /g, '_'))}`" class="text-wiki-link dark:text-sky-400 hover:underline">talk</NuxtLink>
+            ·
+            <NuxtLink :to="`/edit/${encodeURIComponent(item.document.title.replace(/ /g, '_'))}`" class="text-wiki-link dark:text-sky-400 hover:underline">edit</NuxtLink>
+          </p>
+        </li>
+      </ul>
     </div>
   </div>
 </template>
@@ -254,7 +188,7 @@ const formatSnippet = (raw: string) => {
   if (q) {
     const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
     const regex = new RegExp(`(${escaped})`, 'gi')
-    clean = clean.replace(regex, '<mark class="bg-amber-200 dark:bg-amber-900/60 dark:text-amber-200 px-0.5 rounded font-semibold">$1</mark>')
+    clean = clean.replace(regex, '<mark class="bg-amber-200 dark:bg-amber-900/60 dark:text-amber-200 px-0.5 font-semibold">$1</mark>')
   }
   return clean
 }
@@ -285,4 +219,3 @@ watch(() => route.query.q, (newQ) => {
   }
 })
 </script>
-

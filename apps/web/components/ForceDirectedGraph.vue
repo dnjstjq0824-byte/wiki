@@ -1,13 +1,13 @@
 <!-- apps/web/components/ForceDirectedGraph.vue -->
 <template>
-  <div class="relative w-full h-[600px] bg-slate-900 rounded-xl overflow-hidden border border-slate-800 select-none">
+  <div class="relative w-full h-[600px] bg-slate-900 overflow-hidden border border-wiki-border dark:border-slate-700 select-none">
     <!-- Toolbar Controls -->
-    <div class="absolute top-4 left-4 z-10 flex items-center gap-2 bg-slate-800/80 backdrop-blur px-3 py-1.5 rounded-lg border border-slate-700 text-xs text-slate-200 shadow-md">
-      <button @click="zoomIn" class="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 transition" title="Zoom In">+</button>
-      <button @click="zoomOut" class="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 transition" title="Zoom Out">-</button>
-      <button @click="resetTransform" class="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 transition" title="Reset View">Reset</button>
+    <div class="absolute top-4 left-4 z-10 flex items-center gap-2 bg-slate-800/90 px-3 py-1.5 border border-slate-700 text-xs text-slate-200">
+      <button @click="zoomIn" class="px-2 py-1 bg-slate-700 hover:bg-slate-600 transition" title="Zoom In">+</button>
+      <button @click="zoomOut" class="px-2 py-1 bg-slate-700 hover:bg-slate-600 transition" title="Zoom Out">-</button>
+      <button @click="resetTransform" class="px-2 py-1 bg-slate-700 hover:bg-slate-600 transition" title="Reset View">Reset</button>
       <span class="text-slate-500">|</span>
-      <button @click="toggleSimulation" class="px-2 py-1 rounded bg-forest-700 hover:bg-forest-600 text-white font-medium transition">
+      <button @click="toggleSimulation" class="px-2 py-1 bg-slate-600 hover:bg-slate-500 text-white font-medium transition">
         {{ isSimulating ? 'Pause Physics' : 'Resume Physics' }}
       </button>
       <span class="text-slate-400 font-mono">Zoom: {{ Math.round(scale * 100) }}%</span>
@@ -19,7 +19,7 @@
         v-model="searchQuery"
         type="text"
         placeholder="Filter nodes..."
-        class="px-3 py-1.5 text-xs rounded-lg bg-slate-800/80 backdrop-blur border border-slate-700 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-forest-500"
+        class="px-3 py-1.5 text-xs bg-slate-800/90 border border-slate-700 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-sky-500"
       />
     </div>
 
@@ -28,7 +28,6 @@
       v-if="simNodes.length === 0"
       class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 text-slate-400 text-xs"
     >
-      <span class="text-2xl">🕸️</span>
       <p>No topic nodes to visualize yet.</p>
     </div>
 
@@ -108,20 +107,18 @@
     <!-- Selected Node Detail Overlay Card -->
     <div
       v-if="selectedNode"
-      class="absolute bottom-4 left-4 z-10 w-80 bg-slate-800/95 backdrop-blur p-4 rounded-xl border border-slate-700 text-slate-100 shadow-xl"
+      class="absolute bottom-4 left-4 z-10 w-80 bg-slate-800 p-4 border border-slate-700 text-slate-100"
     >
       <div class="flex items-center justify-between pb-2 border-b border-slate-700 mb-2">
-        <h3 class="font-bold text-sm text-forest-400 flex items-center gap-1.5">
-          <span>🌿</span> {{ selectedNode.name }}
+        <h3 class="font-bold text-sm">
+          {{ selectedNode.name }}
         </h3>
-        <button @click="selectedNode = null" class="text-slate-400 hover:text-slate-200 text-xs">✕</button>
+        <button @click="selectedNode = null" class="text-slate-400 hover:text-slate-200 text-xs px-1">✕</button>
       </div>
-      <p class="text-xs text-slate-300 leading-relaxed mb-3">
-      </p>
-      <div class="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-700/60">
+      <div class="flex items-center justify-between text-[11px] text-slate-400 pt-2">
         <span>Connections: {{ getDegree(selectedNode.id) }} edges</span>
-        <NuxtLink :to="`/w/${selectedNode.name.replace(/ /g, '_')}`" class="text-forest-400 hover:underline font-semibold">
-          Open Article →
+        <NuxtLink :to="`/w/${selectedNode.name.replace(/ /g, '_')}`" class="text-sky-400 hover:underline font-semibold">
+          Open article
         </NuxtLink>
       </div>
     </div>

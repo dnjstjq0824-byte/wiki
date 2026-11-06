@@ -1,98 +1,98 @@
 <!-- apps/web/components/SplitPaneEditor.vue -->
 <template>
-  <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm flex flex-col h-[650px]">
+  <div class="border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-900 flex flex-col h-[650px]">
     <!-- Formatting Toolbar -->
-    <div class="px-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 flex flex-wrap items-center justify-between gap-2 text-xs">
-      <div class="flex flex-wrap items-center gap-1 font-semibold">
+    <div class="px-3 py-2 bg-slate-100 dark:bg-slate-800 border-b border-wiki-border dark:border-slate-700 flex flex-wrap items-center justify-between gap-2 text-[13px]">
+      <div class="flex flex-wrap items-center gap-1">
         <button
           @click="insertFormat('\'\'\'', '\'\'\'')"
-          class="px-2.5 py-1 rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:bg-slate-100 text-slate-800 dark:text-slate-200"
+          class="px-2.5 py-1 bg-white dark:bg-slate-700 border border-wiki-border dark:border-slate-600 hover:bg-slate-100 text-slate-800 dark:text-slate-200"
           title="Bold ('''text''')"
         >
           <strong>B</strong>
         </button>
         <button
           @click="insertFormat('\'\'', '\'\'')"
-          class="px-2.5 py-1 rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:bg-slate-100 text-slate-800 dark:text-slate-200 italic"
+          class="px-2.5 py-1 bg-white dark:bg-slate-700 border border-wiki-border dark:border-slate-600 hover:bg-slate-100 text-slate-800 dark:text-slate-200"
           title="Italic (''text'')"
         >
-          <em>I</em>
+          <em class="font-wiki">I</em>
         </button>
         <button
           @click="insertFormat('== ', ' ==')"
-          class="px-2.5 py-1 rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:bg-slate-100 text-slate-800 dark:text-slate-200"
+          class="px-2.5 py-1 bg-white dark:bg-slate-700 border border-wiki-border dark:border-slate-600 hover:bg-slate-100 text-slate-800 dark:text-slate-200"
           title="Section Heading H2"
         >
           H2
         </button>
         <button
           @click="insertFormat('=== ', ' ===')"
-          class="px-2.5 py-1 rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:bg-slate-100 text-slate-800 dark:text-slate-200"
+          class="px-2.5 py-1 bg-white dark:bg-slate-700 border border-wiki-border dark:border-slate-600 hover:bg-slate-100 text-slate-800 dark:text-slate-200"
           title="Subsection Heading H3"
         >
           H3
         </button>
         <button
           @click="insertFormat('[[', ']]')"
-          class="px-2.5 py-1 rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:bg-slate-100 text-forest-700 dark:text-forest-400"
+          class="px-2.5 py-1 bg-white dark:bg-slate-700 border border-wiki-border dark:border-slate-600 hover:bg-slate-100 text-wiki-link dark:text-sky-400"
           title="Wiki Internal Link [[Target|Label]]"
         >
           [[ Link ]]
         </button>
         <button
           @click="insertFormat('<ref>', '</ref>')"
-          class="px-2.5 py-1 rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:bg-slate-100 text-sky-700 dark:text-sky-400"
+          class="px-2.5 py-1 bg-white dark:bg-slate-700 border border-wiki-border dark:border-slate-600 hover:bg-slate-100 text-sky-700 dark:text-sky-400"
           title="Citation Reference <ref>Source</ref>"
         >
           &lt;ref&gt;
         </button>
         <button
           @click="insertFormat('[[Category:', ']]')"
-          class="px-2.5 py-1 rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:bg-slate-100 text-purple-700 dark:text-purple-400"
+          class="px-2.5 py-1 bg-white dark:bg-slate-700 border border-wiki-border dark:border-slate-600 hover:bg-slate-100 text-slate-700 dark:text-slate-300"
           title="Add Category"
         >
-          📁 Category
+          Category
         </button>
         <button
           @click="insertFormat('$$\n', '\n$$')"
-          class="px-2.5 py-1 rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:bg-slate-100 text-amber-700 dark:text-amber-400 font-mono"
+          class="px-2.5 py-1 bg-white dark:bg-slate-700 border border-wiki-border dark:border-slate-600 hover:bg-slate-100 text-amber-700 dark:text-amber-400 font-mono"
           title="LaTeX Math Formula"
         >
-          ∑ KaTeX
+          ∑ Math
         </button>
       </div>
 
       <!-- Live Statistics -->
-      <div class="flex items-center gap-3 text-slate-400 text-[11px] font-mono">
-        <span>Words: {{ wordCount }}</span>
-        <span>Characters: {{ text.length }}</span>
-        <span>Lines: {{ lineCount }}</span>
+      <div class="flex items-center gap-3 text-slate-500 text-xs font-mono">
+        <span>{{ wordCount }} words</span>
+        <span>{{ text.length }} chars</span>
+        <span>{{ lineCount }} lines</span>
       </div>
     </div>
 
     <!-- Dual Pane Body -->
     <div class="flex-1 grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-200 dark:divide-slate-800 overflow-hidden">
       <!-- Left: Raw Wikitext Code Input -->
-      <div class="flex flex-col h-full bg-slate-50/50 dark:bg-slate-950/40">
-        <div class="px-4 py-1.5 bg-slate-100/60 dark:bg-slate-800/40 border-b border-slate-200 dark:border-slate-800 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-          Source Wikitext / Markdown
+      <div class="flex flex-col h-full bg-slate-50 dark:bg-slate-950/40">
+        <div class="px-3 py-1 bg-slate-100 dark:bg-slate-800/40 border-b border-wiki-border dark:border-slate-800 text-xs text-slate-500">
+          Source
         </div>
         <textarea
           ref="textareaRef"
           v-model="text"
           placeholder="Type wikitext or markdown here..."
-          class="flex-1 p-4 font-mono text-xs text-slate-900 dark:text-slate-100 bg-transparent resize-none focus:outline-none leading-relaxed"
+          class="flex-1 p-4 font-mono text-[13px] text-slate-900 dark:text-slate-100 bg-transparent resize-none focus:outline-none leading-relaxed"
           @keydown.tab.prevent="insertTab"
         ></textarea>
       </div>
 
       <!-- Right: Real-time HTML Preview -->
       <div class="flex flex-col h-full bg-white dark:bg-slate-900 overflow-hidden">
-        <div class="px-4 py-1.5 bg-slate-100/60 dark:bg-slate-800/40 border-b border-slate-200 dark:border-slate-800 text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center justify-between">
-          <span>Live Rendered Preview</span>
-          <span class="text-[10px] text-forest-600 dark:text-forest-400">● Live Synced</span>
+        <div class="px-3 py-1 bg-slate-100 dark:bg-slate-800/40 border-b border-wiki-border dark:border-slate-800 text-xs text-slate-500 flex items-center justify-between">
+          <span>Preview</span>
+          <span class="text-emerald-700 dark:text-emerald-400">Live</span>
         </div>
-        <div class="flex-1 p-6 overflow-y-auto prose dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 text-sm leading-relaxed">
+        <div class="flex-1 p-6 overflow-y-auto text-slate-800 dark:text-slate-200 text-sm leading-relaxed">
           <div v-html="renderedHtml"></div>
         </div>
       </div>
@@ -167,17 +167,17 @@ const renderedHtml = computed(() => {
   let html = text.value
 
   // Headings
-  html = html.replace(/^=== (.*?) ===$/gm, '<h3 class="text-base font-bold text-slate-900 dark:text-slate-100 mt-4 mb-2 pb-1 border-b border-slate-100 dark:border-slate-800">$1</h3>')
-  html = html.replace(/^== (.*?) ==$/gm, '<h2 class="text-xl font-bold text-slate-900 dark:text-slate-100 mt-5 mb-3 pb-1 border-b border-slate-200 dark:border-slate-800">$1</h2>')
+  html = html.replace(/^=== (.*?) ===$/gm, '<h3 class="text-base font-bold mt-4 mb-2">$1</h3>')
+  html = html.replace(/^== (.*?) ==$/gm, '<h2 class="font-wiki text-xl mt-5 mb-3 pb-1 border-b border-wiki-border dark:border-slate-700">$1</h2>')
 
   // Bold & Italic
-  html = html.replace(/'''(.*?)'''/g, '<strong class="font-bold text-slate-900 dark:text-slate-100">$1</strong>')
+  html = html.replace(/'''(.*?)'''/g, '<strong class="font-bold">$1</strong>')
   html = html.replace(/''(.*?)''/g, '<em class="italic">$1</em>')
 
   // Internal Links [[Target|Label]] or [[Target]]
   html = html.replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_, target, label) => {
     const textLabel = label || target
-    return `<a href="/w/${encodeURIComponent(target.trim().replace(/ /g, '_'))}" class="text-sky-600 dark:text-sky-400 hover:underline font-medium">${textLabel}</a>`
+    return `<a href="/w/${encodeURIComponent(target.trim().replace(/ /g, '_'))}" class="text-wiki-link dark:text-sky-400 hover:underline">${textLabel}</a>`
   })
 
   // Footnote <ref>
@@ -186,22 +186,22 @@ const renderedHtml = computed(() => {
   html = html.replace(/<ref>(.*?)<\/ref>/g, (_, refText) => {
     references.push(refText)
     const idx = refCount++
-    return `<sup class="text-forest-600 font-semibold cursor-pointer">[${idx}]</sup>`
+    return `<sup class="text-wiki-link font-semibold">[${idx}]</sup>`
   })
 
   // Categories
   html = html.replace(/\[\[Category:(.*?)\]\]/g, (_, cat) => {
-    return `<span class="inline-block px-2 py-0.5 rounded text-[11px] bg-slate-100 dark:bg-slate-800 text-forest-700 dark:text-forest-400 mr-1.5 mb-1 font-medium">📁 ${cat}</span>`
+    return `<span class="inline-block px-2 py-0.5 text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 mr-1.5 mb-1">${cat}</span>`
   })
 
   // Math Blocks
   html = html.replace(/\$\$([\s\S]*?)\$\$/g, (_, math) => {
-    return `<div class="p-3 my-2 bg-slate-100 dark:bg-slate-800 rounded font-mono text-xs text-amber-700 dark:text-amber-300 text-center overflow-x-auto">${math.trim()}</div>`
+    return `<div class="p-3 my-2 border border-wiki-border dark:border-slate-700 bg-wiki-pagebg dark:bg-slate-800 font-mono text-xs text-center overflow-x-auto">${math.trim()}</div>`
   })
 
   // Append References list if exists
   if (references.length > 0) {
-    html += '<div class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800"><h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">References</h4><ol class="list-decimal list-inside text-xs text-slate-500 space-y-1">'
+    html += '<div class="mt-6 pt-4 border-t border-wiki-border dark:border-slate-700"><h4 class="text-xs font-bold text-slate-500 mb-2">References</h4><ol class="list-decimal list-inside text-xs text-slate-500 space-y-1">'
     references.forEach((r) => {
       html += `<li>${r}</li>`
     })

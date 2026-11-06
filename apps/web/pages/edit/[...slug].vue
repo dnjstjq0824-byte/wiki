@@ -1,6 +1,8 @@
 <!-- apps/web/pages/edit/[...slug].vue -->
 <template>
-  <div class="space-y-6">
+  <div>
+    <WikiTabs :slug="slug" active="edit" />
+
     <!-- Conflict Resolution View (if conflict occurs) -->
     <EditConflict
       v-if="hasConflict"
@@ -10,58 +12,53 @@
       @cancel="hasConflict = false"
     />
 
-    <!-- Main Editor Card -->
-    <div v-else class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm space-y-5">
-      <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-        <div>
-          <h1 class="text-xl font-bold text-slate-900 dark:text-slate-100">
-            Editing: <span class="text-forest-700 dark:text-forest-400">{{ displayTitle }}</span>
-          </h1>
-          <p class="text-xs text-slate-500">Live synchronized dual-syntax Wikitext & Extended Markdown editor</p>
-        </div>
-        <div class="flex items-center gap-2">
-          <NuxtLink :to="`/w/${slug}`" class="text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200">
-            ✕ Cancel
-          </NuxtLink>
-        </div>
-      </div>
+    <div v-else>
+      <h1 class="font-wiki text-3xl text-slate-900 dark:text-slate-100 border-b border-wiki-border dark:border-slate-700 pb-1">
+        Editing: {{ displayTitle }}
+      </h1>
+      <p class="text-sm text-slate-500 mt-1">
+        <NuxtLink :to="`/w/${slug}`" class="text-wiki-link dark:text-sky-400 hover:underline">← Back to article</NuxtLink>
+        · Your changes are released under CC BY-SA 4.0
+      </p>
 
       <!-- Split Pane Component -->
-      <SplitPaneEditor v-model="sourceContent" />
+      <div class="mt-4">
+        <SplitPaneEditor v-model="sourceContent" />
+      </div>
 
       <!-- Edit Summary & Save Action -->
-      <div class="pt-4 border-t border-slate-200 dark:border-slate-800 space-y-3">
-        <div v-if="saveError" class="p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-xs text-rose-700 dark:text-rose-300">
+      <div class="mt-4 space-y-3">
+        <div v-if="saveError" class="border border-red-300 dark:border-red-900 bg-red-50 dark:bg-red-950/40 px-3 py-2 text-sm text-red-700 dark:text-red-300">
           {{ saveError }}
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
-            Edit Summary (Briefly describe your changes)
+          <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            Edit summary
           </label>
           <input
             v-model="summary"
             type="text"
             placeholder="e.g., Added definition, fixed typo, expanded citations, updated topic link"
-            class="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-forest-500"
+            class="w-full px-2.5 py-1.5 text-sm border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-wiki-link"
           />
         </div>
 
-        <div class="flex items-center justify-between">
-          <label class="inline-flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400 cursor-pointer">
-            <input type="checkbox" v-model="isMinor" class="rounded border-slate-300 text-forest-600 focus:ring-forest-500" />
-            <span>This is a minor edit (formatting / typo fix)</span>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <label class="inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 cursor-pointer">
+            <input type="checkbox" v-model="isMinor" />
+            <span>This is a minor edit</span>
           </label>
-          <div class="flex gap-2">
-            <NuxtLink :to="`/w/${slug}`" class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100">
+          <div class="flex gap-2 text-sm">
+            <NuxtLink :to="`/w/${slug}`" class="px-4 py-1.5 border border-wiki-border dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800">
               Cancel
             </NuxtLink>
             <button
               @click="handleSave"
               :disabled="saving"
-              class="px-6 py-2 rounded-lg bg-forest-600 hover:bg-forest-500 text-white font-bold text-xs shadow-sm transition disabled:opacity-50"
+              class="px-6 py-1.5 bg-wiki-link hover:bg-sky-700 text-white font-semibold disabled:opacity-50"
             >
-              {{ saving ? 'Publishing...' : 'Publish Revision' }}
+              {{ saving ? 'Publishing…' : 'Publish Revision' }}
             </button>
           </div>
         </div>

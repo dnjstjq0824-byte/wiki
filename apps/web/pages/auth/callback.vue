@@ -1,20 +1,20 @@
 <!-- apps/web/pages/auth/callback.vue -->
 <template>
-  <div class="min-h-[60vh] flex items-center justify-center p-4">
-    <div class="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl text-center space-y-4">
-      <div v-if="status === 'loading'" class="space-y-3">
-        <div class="mx-auto w-8 h-8 rounded-full border-2 border-forest-600 border-t-transparent animate-spin" aria-hidden="true"></div>
-        <p class="text-sm text-slate-600 dark:text-slate-300" role="status">
-          Completing sign-in<template v-if="provider"> with {{ providerLabel }}</template>...
-        </p>
-      </div>
-      <div v-else class="space-y-3">
-        <h1 class="text-base font-bold text-slate-900 dark:text-slate-100">Sign-in failed</h1>
-        <p class="text-xs text-rose-700 dark:text-rose-300">{{ errorMsg }}</p>
-        <NuxtLink to="/" class="inline-block text-xs font-semibold text-forest-600 dark:text-forest-400 hover:underline">
-          Back to home
+  <div class="max-w-md mx-auto py-10 text-center">
+    <div v-if="status === 'loading'">
+      <h1 class="font-wiki text-2xl text-slate-900 dark:text-slate-100">Signing you in…</h1>
+      <p class="text-sm text-slate-500 mt-2" role="status">
+        Completing sign-in<template v-if="provider"> with {{ providerLabel }}</template>…
+      </p>
+    </div>
+    <div v-else>
+      <h1 class="font-wiki text-2xl text-slate-900 dark:text-slate-100">Sign-in failed</h1>
+      <p class="text-sm text-red-700 dark:text-red-300 mt-2">{{ errorMsg }}</p>
+      <p class="mt-4">
+        <NuxtLink to="/" class="text-sm text-wiki-link dark:text-sky-400 hover:underline">
+          Back to the main page
         </NuxtLink>
-      </div>
+      </p>
     </div>
   </div>
 </template>

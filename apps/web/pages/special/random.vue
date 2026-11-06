@@ -1,49 +1,47 @@
 <!-- apps/web/pages/special/random.vue -->
 <template>
-  <div class="max-w-3xl mx-auto">
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-8 shadow-sm text-center space-y-5">
-      <div class="text-4xl">🎲</div>
-      <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Random Article</h1>
+  <div class="max-w-2xl mx-auto text-center">
+    <h1 class="font-wiki text-3xl text-slate-900 dark:text-slate-100 border-b border-wiki-border dark:border-slate-700 pb-1">
+      Random Article
+    </h1>
 
-      <div v-if="loading" class="py-8 text-slate-400 text-xs space-y-2">
-        <div class="inline-block animate-spin text-2xl">⌛</div>
-        <p>Rolling the knowledge dice...</p>
-      </div>
+    <div v-if="loading" class="py-10 text-sm text-slate-500">
+      <p>Choosing a random article…</p>
+    </div>
 
-      <div v-else-if="loadError" class="space-y-4">
-        <p class="text-xs text-slate-500">{{ loadError }}</p>
+    <div v-else-if="loadError" class="py-8 space-y-4">
+      <p class="text-sm text-slate-500">{{ loadError }}</p>
+      <button
+        @click="rollRandom"
+        class="px-5 py-1.5 text-sm bg-wiki-link hover:bg-sky-700 text-white"
+      >
+        Try again
+      </button>
+    </div>
+
+    <div v-else-if="page" class="py-8 space-y-3">
+      <p class="text-xs text-slate-500 uppercase tracking-wide">Your random destination</p>
+      <p class="font-wiki text-2xl">
+        <NuxtLink :to="`/w/${page.title}`" class="text-wiki-link dark:text-sky-400 hover:underline">
+          {{ page.title.replace(/_/g, ' ') }}
+        </NuxtLink>
+      </p>
+      <p v-if="page.summary" class="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
+        {{ page.summary }}
+      </p>
+      <div class="flex items-center justify-center gap-2 pt-2 text-sm">
+        <NuxtLink
+          :to="`/w/${page.title}`"
+          class="px-5 py-1.5 bg-wiki-link hover:bg-sky-700 text-white"
+        >
+          Read Article
+        </NuxtLink>
         <button
           @click="rollRandom"
-          class="px-5 py-2 rounded-lg bg-forest-600 hover:bg-forest-500 text-white font-bold text-xs transition"
+          class="px-5 py-1.5 border border-wiki-border dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
         >
-          Try Again
+          Roll again
         </button>
-      </div>
-
-      <div v-else-if="page" class="space-y-4">
-        <div>
-          <p class="text-[11px] font-bold text-forest-700 dark:text-forest-400 uppercase tracking-wider mb-1">Your random destination</p>
-          <NuxtLink :to="`/w/${page.title}`" class="text-xl font-bold text-slate-900 dark:text-slate-100 hover:text-forest-600 dark:hover:text-forest-400 transition">
-            {{ page.title.replace(/_/g, ' ') }}
-          </NuxtLink>
-          <p v-if="page.summary" class="text-xs text-slate-500 mt-2 max-w-md mx-auto leading-relaxed">
-            {{ page.summary }}
-          </p>
-        </div>
-        <div class="flex items-center justify-center gap-2">
-          <NuxtLink
-            :to="`/w/${page.title}`"
-            class="px-5 py-2 rounded-lg bg-forest-600 hover:bg-forest-500 text-white font-bold text-xs transition"
-          >
-            Read Article →
-          </NuxtLink>
-          <button
-            @click="rollRandom"
-            class="px-5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold text-xs transition"
-          >
-            🎲 Roll Again
-          </button>
-        </div>
       </div>
     </div>
   </div>

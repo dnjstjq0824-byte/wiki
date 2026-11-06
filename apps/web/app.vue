@@ -1,29 +1,37 @@
 <template>
-  <div class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans transition-colors flex flex-col">
+  <div class="min-h-screen bg-wiki-pagebg dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans flex flex-col">
     <a
       href="#main-content"
-      class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-forest-600 focus:text-white focus:text-xs focus:font-bold"
+      class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:border focus:border-wiki-border focus:bg-white focus:text-wiki-link focus:text-xs focus:font-bold"
     >
       Skip to main content
     </a>
     <WikiHeader />
-    <div class="max-w-7xl mx-auto px-4 py-6 flex gap-6 w-full flex-1">
+    <div class="max-w-[72rem] mx-auto px-3 py-3 flex gap-0 w-full flex-1 items-start">
       <WikiSidebar />
-      <main id="main-content" class="flex-1 min-w-0" tabindex="-1">
+      <main id="main-content" class="flex-1 min-w-0 bg-white dark:bg-slate-900 border border-wiki-border dark:border-slate-800 px-5 py-4 md:px-7 md:py-5" tabindex="-1">
         <NuxtPage />
       </main>
     </div>
-    <footer class="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-      <div class="max-w-7xl mx-auto px-4 py-5 flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-500">
-        <div class="flex items-center gap-2">
-          <img src="/logos/treewiki.svg" alt="" class="w-5 h-5 rounded" aria-hidden="true" />
-          <span>Treewiki · Free knowledge under <span class="font-semibold">CC BY-SA 4.0</span></span>
+    <footer class="border-t border-wiki-border dark:border-slate-800 bg-white dark:bg-slate-900 mt-2">
+      <div class="max-w-[72rem] mx-auto px-5 py-4 text-[11px] text-slate-600 dark:text-slate-400 space-y-2">
+        <p>
+          Text is available under the <span class="font-semibold">Creative Commons Attribution-ShareAlike 4.0 License</span>;
+          additional terms may apply. Contributions must follow a neutral point of view with verifiable sources.
+        </p>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <img src="/logos/treewiki.svg" alt="" class="w-4 h-4" aria-hidden="true" />
+            <span>Treewiki · The free knowledge platform</span>
+          </div>
+          <nav aria-label="Legal and about">
+            <ul class="flex items-center gap-3">
+              <li><NuxtLink to="/legal/terms" class="text-wiki-link dark:text-sky-400 hover:underline">Terms of Service</NuxtLink></li>
+              <li><NuxtLink to="/legal/privacy" class="text-wiki-link dark:text-sky-400 hover:underline">Privacy Policy</NuxtLink></li>
+              <li><NuxtLink to="/special/recent-changes" class="text-wiki-link dark:text-sky-400 hover:underline">Recent Changes</NuxtLink></li>
+            </ul>
+          </nav>
         </div>
-        <nav aria-label="Legal and about" class="flex items-center gap-4">
-          <NuxtLink to="/legal/terms" class="hover:text-forest-600 dark:hover:text-forest-400 hover:underline">Terms of Service</NuxtLink>
-          <NuxtLink to="/legal/privacy" class="hover:text-forest-600 dark:hover:text-forest-400 hover:underline">Privacy Policy</NuxtLink>
-          <NuxtLink to="/special/recent-changes" class="hover:text-forest-600 dark:hover:text-forest-400 hover:underline">Recent Changes</NuxtLink>
-        </nav>
       </div>
     </footer>
   </div>

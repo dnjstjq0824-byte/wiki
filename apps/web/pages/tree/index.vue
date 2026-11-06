@@ -1,146 +1,132 @@
 <!-- apps/web/pages/tree/index.vue -->
 <template>
-  <div class="space-y-6 max-w-6xl mx-auto">
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
-      <!-- Title & Tab Bar -->
-      <div class="flex flex-wrap items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 mb-6 gap-4">
-        <div>
-          <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-            <span>🌲</span> Topic Tree Knowledge Taxonomy
-          </h1>
-          <p class="text-xs text-slate-500">Directed Acyclic Graph (DAG) visualizing prerequisite relationships and topic hierarchies</p>
-        </div>
+  <div>
+    <h1 class="font-wiki text-3xl text-slate-900 dark:text-slate-100 border-b border-wiki-border dark:border-slate-700 pb-1">
+      Topic Tree Knowledge Taxonomy
+    </h1>
+    <p class="text-sm text-slate-500 mt-1">Prerequisite relationships and hierarchies across the knowledge graph (DAG).</p>
 
-        <!-- View Switcher -->
-        <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg text-xs font-semibold">
-          <button
-            @click="activeTab = 'graph'"
-            :class="activeTab === 'graph' ? 'bg-white dark:bg-slate-700 text-forest-700 dark:text-forest-400 shadow-xs' : 'text-slate-600 dark:text-slate-400'"
-            class="px-3 py-1.5 rounded-md transition flex items-center gap-1.5"
-          >
-            <span>🕸️</span> Network Graph
-          </button>
-          <button
-            @click="activeTab = 'tree'"
-            :class="activeTab === 'tree' ? 'bg-white dark:bg-slate-700 text-forest-700 dark:text-forest-400 shadow-xs' : 'text-slate-600 dark:text-slate-400'"
-            class="px-3 py-1.5 rounded-md transition flex items-center gap-1.5"
-          >
-            <span>🌳</span> Hierarchy Tree
-          </button>
-          <button
-            @click="activeTab = 'directory'"
-            :class="activeTab === 'directory' ? 'bg-white dark:bg-slate-700 text-forest-700 dark:text-forest-400 shadow-xs' : 'text-slate-600 dark:text-slate-400'"
-            class="px-3 py-1.5 rounded-md transition flex items-center gap-1.5"
-          >
-            <span>📋</span> Topic Directory
-          </button>
-        </div>
+    <!-- View Switcher -->
+    <nav aria-label="Taxonomy views" class="flex items-end gap-0 text-sm border-b border-wiki-border dark:border-slate-700 mt-4 -mb-px">
+      <button
+        @click="activeTab = 'graph'"
+        class="px-3 py-1 border border-b-0 -mb-px mr-1"
+        :class="activeTab === 'graph' ? 'bg-white dark:bg-slate-900 border-wiki-border dark:border-slate-700 font-semibold' : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-wiki-link dark:text-sky-400'"
+      >
+        Network Graph
+      </button>
+      <button
+        @click="activeTab = 'tree'"
+        class="px-3 py-1 border border-b-0 -mb-px mr-1"
+        :class="activeTab === 'tree' ? 'bg-white dark:bg-slate-900 border-wiki-border dark:border-slate-700 font-semibold' : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-wiki-link dark:text-sky-400'"
+      >
+        Hierarchy Tree
+      </button>
+      <button
+        @click="activeTab = 'directory'"
+        class="px-3 py-1 border border-b-0 -mb-px mr-1"
+        :class="activeTab === 'directory' ? 'bg-white dark:bg-slate-900 border-wiki-border dark:border-slate-700 font-semibold' : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-wiki-link dark:text-sky-400'"
+      >
+        Topic Directory
+      </button>
+    </nav>
+
+    <!-- Tab 1: Force-Directed Knowledge Graph -->
+    <div v-if="activeTab === 'graph'" class="mt-3">
+      <div v-if="loading" class="h-[400px] flex items-center justify-center border border-wiki-border dark:border-slate-700 bg-slate-900 text-slate-400 text-sm">
+        Loading taxonomy…
       </div>
+      <ForceDirectedGraph
+        v-else
+        :nodes="graphNodes"
+        :edges="graphEdges"
+        @select-node="handleGraphSelect"
+      />
+    </div>
 
-      <!-- Tab 1: Force-Directed Knowledge Graph -->
-      <div v-if="activeTab === 'graph'">
-        <div v-if="loading" class="h-[600px] flex items-center justify-center bg-slate-900 rounded-xl text-slate-400 text-xs">
-          <span class="inline-block animate-spin mr-2">⌛</span> Loading DAG taxonomy...
-        </div>
-        <ForceDirectedGraph
-          v-else
-          :nodes="graphNodes"
-          :edges="graphEdges"
-          @select-node="handleGraphSelect"
-        />
+    <!-- Tab 2: D3 Hierarchy Tree Viewer -->
+    <div v-else-if="activeTab === 'tree'" class="mt-3">
+      <div v-if="loading" class="h-[400px] flex items-center justify-center border border-wiki-border dark:border-slate-700 bg-slate-900 text-slate-400 text-sm">
+        Loading hierarchy…
       </div>
+      <div v-else-if="loadError" class="py-10 text-center text-sm text-slate-500 space-y-3">
+        <p>{{ loadError }}</p>
+        <button @click="loadTopicData" class="px-4 py-1 bg-wiki-link hover:bg-sky-700 text-white">Retry</button>
+      </div>
+      <D3TreeViewer v-else :root="hierarchyRoot" />
+    </div>
 
-      <!-- Tab 2: D3 Hierarchy Tree Viewer -->
-      <div v-else-if="activeTab === 'tree'">
-        <div v-if="loading" class="h-[600px] flex items-center justify-center bg-slate-900 rounded-xl text-slate-400 text-xs">
-          <span class="inline-block animate-spin mr-2">⌛</span> Loading hierarchical taxonomy...
+    <!-- Tab 3: Topic Directory -->
+    <div v-else class="mt-3 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="md:col-span-2">
+        <div v-if="loading" class="py-10 text-center text-sm text-slate-500">
+          <p>Loading topic taxonomy…</p>
         </div>
-        <div v-else-if="loadError" class="h-[300px] flex flex-col items-center justify-center gap-3 bg-slate-900 rounded-xl text-slate-400 text-xs">
+
+        <div v-else-if="loadError" class="py-10 text-center text-sm text-slate-500 space-y-3">
           <p>{{ loadError }}</p>
-          <button @click="loadTopicData" class="px-4 py-1.5 rounded-lg bg-forest-600 hover:bg-forest-500 text-white font-bold">Retry</button>
+          <button @click="loadTopicData" class="px-4 py-1 bg-wiki-link hover:bg-sky-700 text-white">Retry</button>
         </div>
-        <D3TreeViewer v-else :root="hierarchyRoot" />
+
+        <div v-else-if="displayNodes.length === 0" class="py-10 text-center text-sm text-slate-500">
+          <p>No topic nodes yet. Topics appear here once curators add them.</p>
+        </div>
+
+        <table v-else class="w-full text-sm border-collapse">
+          <thead>
+            <tr class="border-b border-wiki-border dark:border-slate-700 text-left text-slate-500">
+              <th class="py-1.5 pr-3 font-semibold">Topic</th>
+              <th class="py-1.5 pr-3 font-semibold">Difficulty</th>
+              <th class="py-1.5 font-semibold">Subtopics</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="node in displayNodes"
+              :key="node.id"
+              class="border-b border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50"
+              :class="{ 'bg-sky-50 dark:bg-sky-950/30': selectedNode?.id === node.id }"
+              @click="selectedNode = node"
+            >
+              <td class="py-2 pr-3">
+                <span class="font-semibold">{{ node.title }}</span>
+                <span class="block text-[13px] text-slate-500">{{ node.description }}</span>
+              </td>
+              <td class="py-2 pr-3 font-mono text-[13px]">{{ node.difficulty }}</td>
+              <td class="py-2 text-[13px] font-mono text-slate-500">{{ node.children.join(', ') || '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
-      <!-- Tab 3: Topic Directory Grid -->
-      <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Interactive Hierarchy Column -->
-        <div class="md:col-span-2 border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-slate-50/50 dark:bg-slate-950/40 space-y-3">
-          <div v-if="loading" class="py-12 text-center text-slate-400 text-xs">
-            <span class="inline-block animate-spin text-xl mb-1">⌛</span>
-            <p>Loading topic taxonomy...</p>
-          </div>
-
-          <div v-else-if="loadError" class="py-12 text-center text-slate-400 text-xs space-y-3">
-            <p>{{ loadError }}</p>
-            <button @click="loadTopicData" class="px-4 py-1.5 rounded-lg bg-forest-600 hover:bg-forest-500 text-white font-bold">Retry</button>
-          </div>
-
-          <div v-else-if="displayNodes.length === 0" class="py-12 text-center text-slate-400 text-xs">
-            <p>No topic nodes yet. Topics appear here once curators add them.</p>
-          </div>
-
-          <div
-            v-else
-            v-for="node in displayNodes"
-            :key="node.id"
-            class="p-3.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs cursor-pointer hover:border-forest-500 transition"
-            :class="{ 'border-forest-500 ring-1 ring-forest-500': selectedNode?.id === node.id }"
-            @click="selectedNode = node"
-          >
-            <div class="flex items-center justify-between mb-1">
-              <span class="font-bold text-sm text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                <span>{{ node.icon }}</span> {{ node.title }}
-              </span>
-              <span class="text-xs font-mono text-slate-400">Difficulty {{ node.difficulty }}</span>
-            </div>
-            <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed">{{ node.description }}</p>
-            <div v-if="node.children.length > 0" class="mt-2.5 flex flex-wrap gap-1.5">
-              <span v-for="sub in node.children" :key="sub" class="text-[11px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-mono">
-                ↳ {{ sub }}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Selected Node Inspector Panel -->
-        <div class="border border-slate-200 dark:border-slate-800 rounded-lg p-5 bg-white dark:bg-slate-900 space-y-4">
-          <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100 border-b border-slate-100 dark:border-slate-800 pb-2.5 flex items-center gap-1.5">
-            <span>🔎</span> Node Details
-          </h3>
-          <div v-if="selectedNode" class="space-y-4">
-            <div>
-              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Selected Topic</span>
-              <h4 class="font-bold text-base text-forest-700 dark:text-forest-400 mt-0.5">{{ selectedNode.title }}</h4>
-              <p class="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">{{ selectedNode.description }}</p>
-            </div>
-
-            <div>
-              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Bound Articles</span>
-              <ul class="mt-1.5 space-y-1.5">
-                <li v-for="art in selectedNode.articles" :key="art" class="text-xs">
-                  <NuxtLink :to="`/w/${encodeURIComponent(art.replace(/ /g, '_'))}`" class="text-forest-700 dark:text-forest-400 hover:underline flex items-center gap-1.5 font-medium">
-                    📄 {{ art.replace(/_/g, ' ') }} →
-                  </NuxtLink>
-                </li>
-              </ul>
-            </div>
-
-            <div class="pt-2 border-t border-slate-100 dark:border-slate-800">
-              <NuxtLink
-                :to="`/w/${encodeURIComponent(selectedNode.title.replace(/ /g, '_'))}`"
-                class="block w-full py-2 px-3 text-center rounded-lg bg-forest-600 hover:bg-forest-500 text-white font-bold text-xs transition"
-              >
-                Read Article
+      <!-- Selected Node Inspector -->
+      <aside aria-label="Topic details" class="border border-wiki-border dark:border-slate-700 h-fit">
+        <h2 class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 border-b border-wiki-border dark:border-slate-700 font-bold text-sm">
+          Topic details
+        </h2>
+        <div v-if="selectedNode" class="p-3 text-sm space-y-2">
+          <p class="font-wiki text-lg">{{ selectedNode.title }}</p>
+          <p class="text-slate-600 dark:text-slate-400 text-[13px]">{{ selectedNode.description }}</p>
+          <ul class="space-y-1">
+            <li v-for="art in selectedNode.articles" :key="art">
+              <NuxtLink :to="`/w/${encodeURIComponent(art.replace(/ /g, '_'))}`" class="text-wiki-link dark:text-sky-400 hover:underline">
+                {{ art.replace(/_/g, ' ') }}
               </NuxtLink>
-            </div>
-          </div>
-
-          <div v-else class="text-xs text-slate-400 py-12 text-center">
-            Click on any topic node on the left to inspect its prerequisites and bound encyclopedia articles.
-          </div>
+            </li>
+          </ul>
+          <p>
+            <NuxtLink
+              :to="`/w/${encodeURIComponent(selectedNode.title.replace(/ /g, '_'))}`"
+              class="inline-block px-4 py-1 bg-wiki-link hover:bg-sky-700 text-white text-[13px]"
+            >
+              Read article
+            </NuxtLink>
+          </p>
         </div>
-      </div>
+        <div v-else class="p-3 text-[13px] text-slate-500">
+          Select a topic on the left to inspect its prerequisites and bound articles.
+        </div>
+      </aside>
     </div>
   </div>
 </template>
@@ -172,7 +158,6 @@ interface ApiGraphExport {
 interface DirectoryNodeItem {
   id: string
   title: string
-  icon: string
   difficulty: number
   description: string
   children: string[]
@@ -187,19 +172,6 @@ const loading = ref(true)
 const loadError = ref('')
 const rawNodes = ref<ApiTopicNode[]>([])
 const rawEdges = ref<ApiTopicEdge[]>([])
-
-const icons: Record<string, string> = {
-  cs: '💻',
-  algo: '⚙️',
-  ds: '🧱',
-  graph: '🕸️',
-  diff: '⚖️',
-  ai: '🤖',
-  math: '📐',
-  physics: '⚛️',
-}
-
-const getIcon = (id: string) => icons[id.toLowerCase()] || '📄'
 
 const loadTopicData = async () => {
   loading.value = true
@@ -244,7 +216,6 @@ const displayNodes = computed<DirectoryNodeItem[]>(() => {
   return rawNodes.value.map(n => ({
     id: n.id,
     title: n.name,
-    icon: getIcon(n.id),
     difficulty: n.difficulty || 1,
     description: n.description || 'Topic in the Treewiki knowledge taxonomy.',
     children: n.child_ids || [],
@@ -264,13 +235,12 @@ const hierarchyRoot = computed(() => {
   const build = (id: string, seen: Set<string>): any => {
     const n = byId.get(id)
     if (!n) return null
-    if (seen.has(id)) return { id: n.id, name: n.name, icon: getIcon(n.id), description: n.description, difficulty: n.difficulty || 1 }
+    if (seen.has(id)) return { id: n.id, name: n.name, description: n.description, difficulty: n.difficulty || 1 }
     const next = new Set(seen)
     next.add(id)
     return {
       id: n.id,
       name: n.name,
-      icon: getIcon(n.id),
       description: n.description || 'Topic in the Treewiki knowledge taxonomy.',
       difficulty: n.difficulty || 1,
       children: rawEdges.value
@@ -284,7 +254,6 @@ const hierarchyRoot = computed(() => {
   return {
     id: 'root',
     name: 'Knowledge Graph',
-    icon: '🌲',
     description: 'Root of the Treewiki topic taxonomy.',
     difficulty: 1,
     children: trees,

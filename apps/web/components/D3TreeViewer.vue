@@ -1,22 +1,22 @@
 <!-- apps/web/components/D3TreeViewer.vue -->
 <template>
-  <div class="relative w-full h-[600px] bg-slate-900 rounded-xl overflow-hidden border border-slate-800 flex flex-col">
+  <div class="relative w-full h-[600px] bg-slate-900 overflow-hidden border border-wiki-border dark:border-slate-700 flex flex-col">
     <!-- Header Bar -->
-    <div class="px-4 py-3 bg-slate-800/80 backdrop-blur border-b border-slate-700 flex items-center justify-between">
+    <div class="px-4 py-2.5 bg-slate-800 border-b border-slate-700 flex items-center justify-between">
       <div class="flex items-center gap-2">
-        <span class="text-forest-400 font-bold text-sm">🌳 Hierarchical Topic Tree Explorer</span>
-        <span class="text-xs text-slate-400">| Total Nodes: {{ flattenedNodes.length }}</span>
+        <span class="font-bold text-sm text-slate-100">Topic tree explorer</span>
+        <span class="text-xs text-slate-400">{{ flattenedNodes.length }} nodes</span>
       </div>
       <div class="flex items-center gap-2">
         <button
           @click="expandAll"
-          class="px-2.5 py-1 text-xs rounded bg-slate-700 hover:bg-slate-600 text-slate-200 transition"
+          class="px-2.5 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 transition"
         >
           Expand All
         </button>
         <button
           @click="collapseAll"
-          class="px-2.5 py-1 text-xs rounded bg-slate-700 hover:bg-slate-600 text-slate-200 transition"
+          class="px-2.5 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 transition"
         >
           Collapse All
         </button>
@@ -29,30 +29,29 @@
         v-for="item in visibleNodes"
         :key="item.node.id"
         :style="{ paddingLeft: `${item.depth * 28}px` }"
-        class="flex items-center gap-2 py-1.5 px-3 rounded-lg transition hover:bg-slate-800/60 cursor-pointer group"
-        :class="{ 'bg-slate-800/90 border-l-4 border-forest-500': selectedId === item.node.id }"
+        class="flex items-center gap-2 py-1.5 px-3 transition hover:bg-slate-800/60 cursor-pointer group"
+        :class="{ 'bg-slate-700/60': selectedId === item.node.id }"
         @click="selectNode(item.node)"
       >
         <!-- Toggle Expand/Collapse Icon -->
         <button
           v-if="item.node.children && item.node.children.length > 0"
           @click.stop="toggleCollapse(item.node.id)"
-          class="w-5 h-5 flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-700 text-xs transition"
+          class="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 text-xs transition"
         >
           {{ isCollapsed(item.node.id) ? '▶' : '▼' }}
         </button>
         <span v-else class="w-5 text-center text-slate-600 text-xs">•</span>
 
-        <!-- Node Icon & Title -->
-        <span class="text-sm font-semibold text-slate-200 group-hover:text-forest-400 transition flex items-center gap-2">
-          <span>{{ item.node.icon || '📄' }}</span>
+        <!-- Node Title -->
+        <span class="text-sm font-semibold text-slate-200 group-hover:text-white transition">
           {{ item.node.name }}
         </span>
 
         <!-- Difficulty Badge -->
         <span
           v-if="item.node.difficulty"
-          class="text-[10px] px-2 py-0.5 rounded font-mono font-medium ml-2"
+          class="text-[10px] px-2 py-0.5 border font-mono ml-2"
           :class="difficultyBadgeClass(item.node.difficulty)"
         >
           Level {{ item.node.difficulty }}
@@ -79,9 +78,9 @@
       </div>
       <NuxtLink
         :to="`/w/${selectedNode.name.replace(/ /g, '_')}`"
-        class="px-3 py-1.5 rounded-lg bg-forest-600 hover:bg-forest-500 text-white font-semibold transition"
+        class="px-3 py-1.5 bg-sky-700 hover:bg-sky-600 text-white font-semibold transition"
       >
-        Read Full Article →
+        Read article
       </NuxtLink>
     </div>
   </div>

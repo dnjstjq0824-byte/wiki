@@ -21,10 +21,17 @@ export default {
           900: '#134E4A'
         },
         wiki: {
-          link: '#0284C7',
-          redlink: '#DC2626',
+          link: '#0645AD',
+          visited: '#0B0080',
+          redlink: '#BA0000',
+          pagebg: '#F8F9FA',
+          border: '#C8CCD1',
+          notice: '#FEF6E7',
           darkbg: '#0B192C'
         }
+      },
+      fontFamily: {
+        wiki: ['Georgia', "'Times New Roman'", 'Times', 'serif']
       }
     }
   },

@@ -1,16 +1,48 @@
 <!-- apps/web/components/WikiHeader.vue -->
 <template>
-  <header class="sticky top-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-800 transition-colors">
-    <div class="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
-      <!-- Logo & Brand -->
-      <NuxtLink to="/" class="flex items-center gap-2.5 font-bold text-lg text-slate-800 dark:text-slate-100 hover:opacity-90">
-        <img src="/logos/treewiki.svg" alt="Treewiki" class="w-8 h-8 rounded" />
-        <span class="tracking-tight text-forest-700 dark:text-forest-500">Tree<span class="text-slate-700 dark:text-slate-200">wiki</span></span>
+  <header class="bg-white dark:bg-slate-900 border-b border-wiki-border dark:border-slate-800">
+    <!-- Personal tools bar -->
+    <div class="max-w-[72rem] mx-auto px-3 md:px-5 flex items-center justify-end gap-3 h-8 text-xs">
+      <button
+        @click="toggleTheme"
+        :aria-pressed="isDark"
+        aria-label="Toggle dark mode"
+        class="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+        title="Toggle appearance"
+      >
+        {{ isDark ? 'Dark' : 'Light' }}
+      </button>
+      <template v-if="authStore.isAuthenticated">
+        <span class="font-semibold text-slate-700 dark:text-slate-200">{{ authStore.user?.username }}</span>
+        <span class="font-mono text-[10px] px-1 border border-wiki-border dark:border-slate-700 text-slate-500">
+          {{ authStore.userRole }}
+        </span>
+        <button @click="authStore.clearAuth" class="text-wiki-link dark:text-sky-400 hover:underline" title="Sign Out">
+          Log out
+        </button>
+      </template>
+      <template v-else>
+        <button @click="isAuthModalOpen = true" class="text-wiki-link dark:text-sky-400 hover:underline">
+          Log in
+        </button>
+        <button @click="isAuthModalOpen = true" class="text-wiki-link dark:text-sky-400 hover:underline">
+          Create account
+        </button>
+      </template>
+    </div>
+
+    <!-- Main bar: logo, wordmark, search -->
+    <div class="max-w-[72rem] mx-auto px-3 md:px-5 pb-2 flex items-end justify-between gap-4">
+      <NuxtLink to="/" class="flex items-center gap-2.5 shrink-0" aria-label="Treewiki home">
+        <img src="/logos/treewiki.svg" alt="" class="w-10 h-10" aria-hidden="true" />
+        <span class="leading-tight">
+          <span class="block font-wiki text-xl text-slate-900 dark:text-slate-100">Treewiki</span>
+          <span class="block text-[11px] text-slate-500">The free knowledge platform</span>
+        </span>
       </NuxtLink>
 
-      <!-- Search Bar with Live Autocomplete -->
-      <div class="flex-1 max-w-lg relative" ref="searchContainerRef">
-        <div class="relative flex items-center" role="search">
+      <div class="flex-1 max-w-md relative" ref="searchContainerRef">
+        <div class="flex items-stretch" role="search">
           <label for="site-search" class="sr-only">Search Treewiki</label>
           <input
             id="site-search"
@@ -23,19 +55,23 @@
             :aria-expanded="showSuggestions && suggestions.length > 0"
             aria-controls="search-suggestions"
             aria-autocomplete="list"
-            placeholder="Search Treewiki or enter title... (Press Enter)"
-            class="w-full pl-9 pr-4 py-1.5 text-sm rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-forest-500 transition"
+            placeholder="Search Treewiki"
+            class="w-full px-2.5 py-1 text-sm border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-wiki-link"
           />
-          <span class="absolute left-2.5 text-slate-400 text-xs" aria-hidden="true">🔍</span>
+          <button
+            @click="handleSearch"
+            class="px-3 text-sm border border-l-0 border-wiki-border dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700"
+          >
+            Go
+          </button>
         </div>
 
-        <!-- Autocomplete Dropdown Menu -->
         <div
           v-if="showSuggestions && suggestions.length > 0"
           id="search-suggestions"
           role="listbox"
           aria-label="Search suggestions"
-          class="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl overflow-hidden z-50 text-xs"
+          class="absolute top-full left-0 right-0 mt-0 bg-white dark:bg-slate-900 border border-t-0 border-wiki-border dark:border-slate-700 shadow-md z-50 text-sm"
         >
           <div
             v-for="(item, idx) in suggestions"
@@ -43,77 +79,14 @@
             role="option"
             :aria-selected="false"
             @click="selectSuggestion(item)"
-            class="px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-800/80 cursor-pointer flex items-center justify-between transition"
+            class="px-2.5 py-1.5 hover:bg-sky-50 dark:hover:bg-slate-800 cursor-pointer text-wiki-link dark:text-sky-400"
           >
-            <span class="font-medium text-slate-800 dark:text-slate-200 flex items-center gap-2">
-              <span>📄</span> {{ item }}
-            </span>
-            <span class="text-[10px] text-slate-400">Jump to article →</span>
+            {{ item }}
           </div>
         </div>
       </div>
-
-      <!-- Action Navigation & Auth Controls -->
-      <nav aria-label="Primary" class="flex items-center gap-2">
-        <NuxtLink to="/tree" class="px-3 py-1.5 text-xs font-semibold rounded-md text-forest-700 dark:text-forest-400 hover:bg-forest-50 dark:hover:bg-slate-800 transition">
-          🌲 Topic Trees
-        </NuxtLink>
-        <NuxtLink to="/special/recent-changes" class="px-3 py-1.5 text-xs font-semibold rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-          ⚡ Changes
-        </NuxtLink>
-
-        <!-- Dark/Light Theme Toggle -->
-        <button
-          @click="toggleTheme"
-          :aria-pressed="isDark"
-          aria-label="Toggle dark mode"
-          class="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-          title="Toggle Dark Mode"
-        >
-          <span v-if="isDark">🌙</span>
-          <span v-else>☀️</span>
-        </button>
-
-        <!-- User Authentication State -->
-        <div v-if="authStore.isAuthenticated" class="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-800">
-          <div class="flex items-center gap-1.5">
-            <span class="w-6 h-6 rounded-full bg-forest-600 text-white flex items-center justify-center font-bold text-[10px]">
-              {{ (authStore.user?.username || 'U').charAt(0).toUpperCase() }}
-            </span>
-            <span class="text-xs font-bold text-slate-700 dark:text-slate-200">
-              {{ authStore.user?.username }}
-            </span>
-            <span class="text-[9px] px-1.5 py-0.5 rounded font-mono font-bold bg-slate-100 dark:bg-slate-800 text-forest-600 dark:text-forest-400 border border-slate-200 dark:border-slate-700">
-              {{ authStore.userRole }}
-            </span>
-          </div>
-          <button
-            @click="authStore.clearAuth"
-            class="text-xs text-slate-400 hover:text-rose-600 transition ml-1"
-            title="Sign Out"
-          >
-            Logout
-          </button>
-        </div>
-
-        <div v-else class="flex items-center gap-1.5 pl-2 border-l border-slate-200 dark:border-slate-800">
-          <button
-            @click="isAuthModalOpen = true"
-            class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-          >
-            Sign In
-          </button>
-          <button
-            @click="isAuthModalOpen = true"
-            class="px-3 py-1.5 rounded-lg text-xs font-bold bg-forest-600 hover:bg-forest-500 text-white shadow-2xs transition"
-          >
-            Sign Up
-          </button>
-        </div>
-      </nav>
     </div>
 
-    <!-- Auth Modal Dialog -->
     <AuthModal :is-open="isAuthModalOpen" @close="isAuthModalOpen = false" />
   </header>
 </template>

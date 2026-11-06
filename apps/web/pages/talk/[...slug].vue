@@ -1,330 +1,215 @@
 <!-- apps/web/pages/talk/[...slug].vue -->
 <template>
-  <div class="space-y-6 max-w-5xl mx-auto">
-    <!-- Header Banner -->
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm space-y-4">
-      <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="text-2xl">💬</span>
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">
-              Talk: <span class="text-forest-700 dark:text-forest-400">{{ displayTitle }}</span>
-            </h1>
-          </div>
-          <p class="text-xs text-slate-500 mt-1">
-            Collaborative consensus, RFC proposals, and editorial discussion for this article.
-          </p>
-        </div>
+  <div>
+    <WikiTabs :slug="slug" active="talk" />
 
-        <div class="flex items-center gap-2 text-xs font-semibold">
-          <NuxtLink
-            :to="`/w/${slug}`"
-            class="px-3.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
-          >
-            ← Back to Article
-          </NuxtLink>
-          <button
-            @click="showNewThreadModal = true"
-            class="px-4 py-1.5 rounded-lg bg-forest-600 hover:bg-forest-500 text-white shadow-xs transition flex items-center gap-1.5 font-bold"
-          >
-            <span>+</span> Start New Topic
-          </button>
-        </div>
-      </div>
+    <h1 class="font-wiki text-3xl text-slate-900 dark:text-slate-100 border-b border-wiki-border dark:border-slate-700 pb-1">
+      Talk: {{ displayTitle }}
+    </h1>
+    <p class="text-sm text-slate-500 mt-1">Discussion, RFC proposals, and editorial consensus for this article.</p>
 
-      <!-- Quick Guidance Notice -->
-      <div class="p-3 bg-sky-50 dark:bg-sky-950/40 border border-sky-100 dark:border-sky-900 rounded-lg text-xs text-sky-800 dark:text-sky-300 flex items-start gap-2">
-        <span class="text-base leading-none">ℹ️</span>
-        <div>
-          <strong>Talk Page Guidelines:</strong> Sign your comments, maintain a neutral point of view (NPOV), and be civil. Proposals affecting structure should be initiated via RFC with clear quorum goals.
-        </div>
-      </div>
+    <div class="mt-3 flex justify-end">
+      <button
+        @click="showNewThreadModal = true"
+        class="px-3 py-1 text-sm border border-wiki-border dark:border-slate-700 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700"
+      >
+        + New section
+      </button>
+    </div>
+
+    <div class="mt-3 border border-wiki-border dark:border-slate-700 bg-sky-50 dark:bg-sky-950/30 px-3 py-2 text-[13px] text-slate-700 dark:text-slate-300">
+      <strong>Talk page guidelines:</strong> sign your comments, stay neutral (NPOV), and be civil. Structural proposals should go through RFC with a clear quorum.
     </div>
 
     <!-- Loading State -->
-    <div v-if="loading" class="py-16 text-center text-slate-400 space-y-2">
-      <div class="inline-block animate-spin text-3xl">⌛</div>
-      <p class="text-xs">Loading discussion threads...</p>
+    <div v-if="loading" class="py-12 text-center text-sm text-slate-500">
+      <p>Loading discussion threads…</p>
     </div>
 
     <!-- Empty Discussion State -->
-    <div
-      v-else-if="threads.length === 0"
-      class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-12 text-center shadow-sm space-y-4"
-    >
-      <div class="inline-flex p-4 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 text-3xl">
-        💭
-      </div>
-      <div class="space-y-1">
-        <h2 class="text-lg font-bold text-slate-800 dark:text-slate-200">No discussion topics yet</h2>
-        <p class="text-xs text-slate-500 max-w-sm mx-auto">
-          Be the first to open a discussion, propose an RFC improvement, or ask a question regarding "{{ displayTitle }}".
-        </p>
-      </div>
-      <div>
-        <button
-          @click="showNewThreadModal = true"
-          class="px-5 py-2.5 rounded-lg bg-forest-600 hover:bg-forest-500 text-white font-bold text-xs shadow-xs transition"
-        >
-          Start the First Topic
-        </button>
-      </div>
+    <div v-else-if="threads.length === 0" class="py-10 text-center">
+      <h2 class="font-wiki text-xl text-slate-900 dark:text-slate-100">No discussion topics yet</h2>
+      <p class="text-sm text-slate-500 mt-1">
+        Be the first to open a discussion or propose an RFC regarding “{{ displayTitle }}”.
+      </p>
+      <button
+        @click="showNewThreadModal = true"
+        class="mt-4 px-4 py-1.5 text-sm bg-wiki-link hover:bg-sky-700 text-white"
+      >
+        Start the first topic
+      </button>
     </div>
 
     <!-- Threads List -->
-    <div v-else class="space-y-4">
-      <div
+    <div v-else class="mt-4">
+      <section
         v-for="thread in threads"
         :key="thread.id"
-        class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm transition"
+        class="border-t border-wiki-border dark:border-slate-700 py-3"
       >
-        <!-- Thread Header Bar -->
-        <div
-          class="p-4 md:p-5 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 cursor-pointer hover:bg-slate-100/60 dark:hover:bg-slate-800/70 transition"
-          @click="toggleThread(thread.id)"
-        >
-          <div class="flex items-center gap-3">
-            <span class="text-sm text-slate-400">
-              {{ expandedThreads[thread.id] ? '▼' : '▶' }}
-            </span>
-            <div>
-              <div class="flex items-center gap-2">
-                <span v-if="thread.pinned" class="text-xs" title="Pinned Topic">📌</span>
-                <span v-if="thread.locked" class="text-xs" title="Locked Topic">🔒</span>
-                <h3 class="text-base font-bold text-slate-900 dark:text-slate-100">
-                  {{ thread.title }}
-                </h3>
-              </div>
-              <p class="text-[11px] text-slate-400 mt-0.5">
-                Opened by <strong class="text-slate-600 dark:text-slate-300">{{ thread.author_id }}</strong>
-                • {{ formatTime(thread.created_at) }}
-              </p>
-            </div>
-          </div>
-
-          <!-- Status Badge -->
-          <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-baseline justify-between gap-2 cursor-pointer" @click="toggleThread(thread.id)">
+          <h2 class="font-wiki text-xl text-slate-900 dark:text-slate-100">
+            <span class="text-slate-400 text-base mr-1">{{ expandedThreads[thread.id] ? '▾' : '▸' }}</span>
+            {{ thread.title }}
+          </h2>
+          <p class="text-xs text-slate-500">
             <span
-              class="text-[10px] font-mono font-bold px-2 py-0.5 rounded border uppercase"
+              class="font-mono text-[11px] px-1.5 py-0.5 border uppercase mr-2"
               :class="getStatusBadgeClass(thread.status)"
             >
               {{ thread.status }}
             </span>
-            <span class="text-xs text-slate-400 font-mono">
-              {{ (threadComments[thread.id] || []).length }} replies
-            </span>
-          </div>
+            {{ (threadComments[thread.id] || []).length }} comments · {{ thread.author_id }} · {{ formatTime(thread.created_at) }}
+          </p>
         </div>
 
-        <!-- Thread Body (When Expanded) -->
-        <div v-if="expandedThreads[thread.id]" class="p-5 space-y-6">
+        <div v-if="expandedThreads[thread.id]" class="mt-2 ml-1 space-y-4">
           <!-- Optional RFC Section -->
           <div
             v-if="threadRFC[thread.id]"
-            class="p-4 rounded-xl border border-forest-200 dark:border-forest-900/60 bg-forest-50/50 dark:bg-forest-950/20 space-y-3"
+            class="border border-wiki-border dark:border-slate-700 bg-wiki-notice dark:bg-amber-950/20 px-4 py-3"
           >
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-forest-700 dark:text-forest-400 uppercase tracking-wider flex items-center gap-1.5">
-                <span>🗳️</span> Active Community RFC
-              </span>
-              <span class="text-[11px] font-mono text-slate-500">
-                Quorum: {{ threadRFC[thread.id].quorum }} votes
-              </span>
+            <div class="flex items-center justify-between text-sm">
+              <span class="font-bold">Active Community RFC</span>
+              <span class="text-xs text-slate-500 font-mono">Quorum: {{ threadRFC[thread.id].quorum }} votes</span>
+            </div>
+            <p class="text-sm mt-1">“{{ threadRFC[thread.id].question }}”</p>
+
+            <div class="h-2 w-full bg-slate-200 dark:bg-slate-700 mt-2 flex">
+              <div :style="{ width: `${getRFCVotePct(threadRFC[thread.id], 'SUPPORT')}%` }" class="bg-emerald-600" title="Support"></div>
+              <div :style="{ width: `${getRFCVotePct(threadRFC[thread.id], 'NEUTRAL')}%` }" class="bg-amber-500" title="Neutral"></div>
+              <div :style="{ width: `${getRFCVotePct(threadRFC[thread.id], 'OPPOSE')}%` }" class="bg-rose-600" title="Oppose"></div>
+            </div>
+            <div class="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 mt-1 font-mono">
+              <span>Support: {{ getVoteCount(threadRFC[thread.id], 'SUPPORT') }}</span>
+              <span>Neutral: {{ getVoteCount(threadRFC[thread.id], 'NEUTRAL') }}</span>
+              <span>Oppose: {{ getVoteCount(threadRFC[thread.id], 'OPPOSE') }}</span>
             </div>
 
-            <p class="text-sm font-semibold text-slate-800 dark:text-slate-200">
-              "{{ threadRFC[thread.id].question }}"
-            </p>
-
-            <!-- Vote Tally Visual Bar -->
-            <div class="space-y-1.5 pt-1">
-              <div class="h-2.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden flex">
-                <div
-                  :style="{ width: `${getRFCVotePct(threadRFC[thread.id], 'SUPPORT')}%` }"
-                  class="bg-emerald-500"
-                  title="Support"
-                ></div>
-                <div
-                  :style="{ width: `${getRFCVotePct(threadRFC[thread.id], 'NEUTRAL')}%` }"
-                  class="bg-amber-400"
-                  title="Neutral"
-                ></div>
-                <div
-                  :style="{ width: `${getRFCVotePct(threadRFC[thread.id], 'OPPOSE')}%` }"
-                  class="bg-rose-500"
-                  title="Oppose"
-                ></div>
-              </div>
-
-              <div class="flex items-center justify-between text-[11px] text-slate-500 font-mono">
-                <span class="text-emerald-600 dark:text-emerald-400 font-bold">
-                  Support: {{ getVoteCount(threadRFC[thread.id], 'SUPPORT') }}
-                </span>
-                <span class="text-amber-600 dark:text-amber-400 font-bold">
-                  Neutral: {{ getVoteCount(threadRFC[thread.id], 'NEUTRAL') }}
-                </span>
-                <span class="text-rose-600 dark:text-rose-400 font-bold">
-                  Oppose: {{ getVoteCount(threadRFC[thread.id], 'OPPOSE') }}
-                </span>
-              </div>
-            </div>
-
-            <!-- Cast Vote Action -->
-            <div class="flex items-center gap-2 pt-2 border-t border-forest-100 dark:border-forest-900/40">
-              <span class="text-xs font-semibold text-slate-600 dark:text-slate-400">Cast your vote:</span>
-              <button
-                @click="castRFCVote(threadRFC[thread.id].id, thread.id, 'SUPPORT')"
-                class="px-3 py-1 rounded-md text-xs font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 transition"
-              >
-                ✓ Support
-              </button>
-              <button
-                @click="castRFCVote(threadRFC[thread.id].id, thread.id, 'NEUTRAL')"
-                class="px-3 py-1 rounded-md text-xs font-bold bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 hover:bg-amber-200 transition"
-              >
-                ~ Neutral
-              </button>
-              <button
-                @click="castRFCVote(threadRFC[thread.id].id, thread.id, 'OPPOSE')"
-                class="px-3 py-1 rounded-md text-xs font-bold bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 hover:bg-rose-200 transition"
-              >
-                ✕ Oppose
-              </button>
+            <div class="flex items-center gap-2 mt-2 pt-2 border-t border-wiki-border dark:border-slate-700 text-xs">
+              <span class="text-slate-600 dark:text-slate-400">Vote:</span>
+              <button @click="castRFCVote(threadRFC[thread.id].id, thread.id, 'SUPPORT')" class="px-2.5 py-0.5 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 font-semibold">Support</button>
+              <button @click="castRFCVote(threadRFC[thread.id].id, thread.id, 'NEUTRAL')" class="px-2.5 py-0.5 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-900 text-amber-700 dark:text-amber-400 hover:bg-amber-50 font-semibold">Neutral</button>
+              <button @click="castRFCVote(threadRFC[thread.id].id, thread.id, 'OPPOSE')" class="px-2.5 py-0.5 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-900 text-rose-700 dark:text-rose-400 hover:bg-rose-50 font-semibold">Oppose</button>
             </div>
           </div>
 
           <!-- Comments Thread -->
-          <div class="space-y-3">
+          <div>
             <div
               v-for="comment in (threadComments[thread.id] || [])"
               :key="comment.id"
-              class="p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/50 space-y-1.5"
+              class="py-2 border-b border-dotted border-slate-200 dark:border-slate-800 text-sm"
             >
-              <div class="flex items-center justify-between text-xs">
-                <span class="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                  <span class="w-5 h-5 rounded-full bg-forest-600 text-white flex items-center justify-center text-[10px]">
-                    {{ (comment.author_id || '?').charAt(0).toUpperCase() }}
-                  </span>
-                  {{ comment.author_id }}
-                </span>
-                <span class="text-[11px] text-slate-400 font-mono">
-                  {{ formatTime(comment.created_at) }}
-                </span>
-              </div>
-              <p class="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
-                {{ comment.content }}
-              </p>
+              <p class="text-slate-800 dark:text-slate-200 whitespace-pre-wrap">{{ comment.content }}</p>
+              <p class="text-xs text-slate-500 mt-1">— {{ comment.author_id }}, {{ formatTime(comment.created_at) }}</p>
             </div>
-
-            <div v-if="(threadComments[thread.id] || []).length === 0" class="text-xs text-slate-400 italic py-2">
+            <div v-if="(threadComments[thread.id] || []).length === 0" class="text-sm text-slate-400 italic py-2">
               No replies yet on this thread.
             </div>
           </div>
 
           <!-- Reply Box -->
-          <form @submit.prevent="submitReply(thread.id)" class="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <form @submit.prevent="submitReply(thread.id)" class="space-y-2">
             <textarea
               v-model="replyText[thread.id]"
               rows="2"
               placeholder="Write a constructive response or counterpoint..."
-              class="w-full p-3 text-xs rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-forest-500 transition resize-y"
+              class="w-full p-2 text-sm border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-wiki-link resize-y"
               required
             ></textarea>
             <div class="flex justify-end">
               <button
                 type="submit"
                 :disabled="submittingReply[thread.id]"
-                class="px-4 py-1.5 rounded-lg bg-forest-600 hover:bg-forest-500 text-white font-bold text-xs shadow-xs transition disabled:opacity-50"
+                class="px-4 py-1 bg-wiki-link hover:bg-sky-700 text-white text-sm disabled:opacity-50"
               >
-                {{ submittingReply[thread.id] ? 'Posting...' : 'Post Reply' }}
+                {{ submittingReply[thread.id] ? 'Posting…' : 'Post reply' }}
               </button>
             </div>
           </form>
         </div>
-      </div>
+      </section>
     </div>
 
     <!-- Start New Thread Modal -->
     <div
       v-if="showNewThreadModal"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
     >
-      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
-        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-          <h2 class="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-            <span>💬</span> New Discussion Topic
-          </h2>
-          <button @click="showNewThreadModal = false" class="text-slate-400 hover:text-slate-600">✕</button>
+      <div class="bg-white dark:bg-slate-900 border border-wiki-border dark:border-slate-700 max-w-lg w-full p-5 shadow-xl">
+        <div class="flex items-center justify-between border-b border-wiki-border dark:border-slate-700 pb-2">
+          <h2 class="font-wiki text-xl text-slate-900 dark:text-slate-100">New discussion topic</h2>
+          <button @click="showNewThreadModal = false" class="text-slate-400 hover:text-slate-600 px-1">✕</button>
         </div>
 
-        <form @submit.prevent="createThread" class="space-y-4 text-xs">
+        <form @submit.prevent="createThread" class="mt-3 space-y-3 text-sm">
           <div>
-            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Topic Subject / Title</label>
+            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Subject</label>
             <input
               v-model="newThreadTitle"
               type="text"
               placeholder="e.g. Propose restructuring the Asymptotic Complexity section"
-              class="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-forest-500"
+              class="w-full px-2.5 py-1.5 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-wiki-link"
               required
             />
           </div>
 
           <div>
-            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Initial Opening Statement</label>
+            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Opening statement</label>
             <textarea
               v-model="newThreadContent"
               rows="4"
               placeholder="Describe your suggestion, rationale, or query..."
-              class="w-full p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-forest-500"
+              class="w-full p-2.5 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-wiki-link"
               required
             ></textarea>
           </div>
 
-          <!-- Attach RFC Checkbox -->
-          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-3">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" v-model="attachRFC" class="rounded text-forest-600" />
-              <span class="font-bold text-slate-800 dark:text-slate-200">Formal Request For Comments (RFC)</span>
+          <div class="border border-wiki-border dark:border-slate-700 bg-wiki-pagebg dark:bg-slate-800/40 p-3 space-y-2">
+            <label class="flex items-center gap-2 cursor-pointer font-semibold">
+              <input type="checkbox" v-model="attachRFC" />
+              <span>Attach a formal Request for Comments (RFC)</span>
             </label>
 
-            <div v-if="attachRFC" class="space-y-2 pt-1 border-t border-slate-200 dark:border-slate-700">
+            <div v-if="attachRFC" class="space-y-2 pt-2 border-t border-wiki-border dark:border-slate-700">
               <div>
-                <label class="block text-slate-500 mb-0.5">RFC Proposal Question</label>
+                <label class="block text-slate-500 mb-0.5 text-[13px]">RFC question</label>
                 <input
                   v-model="rfcQuestion"
                   type="text"
                   placeholder="Should we split this article into two independent pages?"
-                  class="w-full px-3 py-1.5 rounded bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700"
+                  class="w-full px-2.5 py-1 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950"
                   required
                 />
               </div>
               <div>
-                <label class="block text-slate-500 mb-0.5">Quorum Threshold (minimum votes)</label>
+                <label class="block text-slate-500 mb-0.5 text-[13px]">Quorum (minimum votes)</label>
                 <input
                   v-model.number="rfcQuorum"
                   type="number"
                   min="1"
                   max="100"
-                  class="w-24 px-3 py-1.5 rounded bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-mono"
+                  class="w-24 px-2.5 py-1 border border-wiki-border dark:border-slate-700 bg-white dark:bg-slate-950 font-mono"
                 />
               </div>
             </div>
           </div>
 
-          <div class="flex items-center justify-end gap-2 pt-2">
+          <div class="flex items-center justify-end gap-2 pt-1">
             <button
               type="button"
               @click="showNewThreadModal = false"
-              class="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-semibold"
+              class="px-4 py-1.5 border border-wiki-border dark:border-slate-700 text-slate-600 dark:text-slate-300"
             >
               Cancel
             </button>
             <button
               type="submit"
               :disabled="submittingNewThread"
-              class="px-5 py-2 rounded-lg bg-forest-600 hover:bg-forest-500 text-white font-bold transition disabled:opacity-50"
+              class="px-5 py-1.5 bg-wiki-link hover:bg-sky-700 text-white disabled:opacity-50"
             >
-              {{ submittingNewThread ? 'Creating...' : 'Publish Topic' }}
+              {{ submittingNewThread ? 'Publishing…' : 'Publish topic' }}
             </button>
           </div>
         </form>
@@ -526,7 +411,7 @@ const getStatusBadgeClass = (status: string) => {
     case 'RESOLVED':
       return 'bg-blue-50 text-blue-700 border-blue-300 dark:bg-blue-950 dark:text-blue-400 dark:border-blue-800'
     case 'RFC':
-      return 'bg-forest-50 text-forest-700 border-forest-300 dark:bg-forest-950 dark:text-forest-400 dark:border-forest-800'
+      return 'bg-forest-50 text-forest-700 border-forest-500 dark:bg-emerald-950 dark:text-emerald-400 dark:border-emerald-800'
     case 'UNDER_DISCUSSION':
       return 'bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-950 dark:text-amber-400 dark:border-amber-800'
     case 'CLOSED':
@@ -573,4 +458,3 @@ onMounted(() => {
   loadThreads()
 })
 </script>
-
